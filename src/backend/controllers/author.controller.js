@@ -248,33 +248,3 @@ export async function deleteAuthorController(
   }
 }
 
-// ============================================
-// DEACTIVATE AUTHOR
-// ============================================
-
-export async function deactivateAuthorController(
-  request,
-  userId,
-  context
-) {
-  try {
-    const id = await getValidatedAuthorId(context);
-
-    const authorService = createAuthorService();
-
-    const author = await authorService.deactivateAuthor(id);
-
-    return Response.json(
-      {
-        success: true,
-        message: "Author deactivated successfully",
-        data: author,
-      },
-      {
-        status: HTTP_STATUS.OK,
-      }
-    );
-  } catch (error) {
-    return handleError(error);
-  }
-}
