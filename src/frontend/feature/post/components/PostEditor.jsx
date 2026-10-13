@@ -18,7 +18,7 @@ import PostSidebar from "@/frontend/feature/post/components/PostSidebar";
 import PostContentEditor from "@/frontend/feature/post/components/PostContentEditor";
 import { slugify } from "@/frontend/lib/format";
 import { postSchema } from "@/frontend/feature/post/schema/post.schema";
-import usePostMutations from "@/frontend/feature/post/hooks/usePostmutations";
+import usePostMutations from "@/frontend/feature/post/hooks/usePostMutations";
 
 function getErrorMessage(error, fallback) {
   return error?.data?.message ?? error?.message ?? fallback;
