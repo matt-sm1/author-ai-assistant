@@ -17,7 +17,6 @@ export function handleError(error) {
     );
   }
 
-  console.error("Unexpected error:", error);
 
   return Response.json(
     {

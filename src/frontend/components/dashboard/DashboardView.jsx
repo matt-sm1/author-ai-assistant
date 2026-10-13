@@ -58,7 +58,7 @@ export default function DashboardView() {
     setToDelete(null);
     toast.success("Post deleted");
   } catch (err) {
-    console.error("Failed to delete post:", err);
+    
     toast.error(
       err?.data?.message || err?.message || "Failed to delete post",
     );

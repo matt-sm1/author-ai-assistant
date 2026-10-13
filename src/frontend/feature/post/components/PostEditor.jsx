@@ -32,19 +32,11 @@ function getFeaturedMediaType(url) {
 
 
 export default function PostEditor({ postId: providedPostId }) {
-  console.log("POST EDITOR RENDERED", providedPostId);
 
   const params = useParams();
   const postId = providedPostId ?? params?.id;
   const isEditMode = Boolean(postId);
-  console.log(
-    "PostEditor params:",
-    params,
-    "postId:",
-    postId,
-    "isEditMode:",
-    isEditMode,
-  );
+  
 
   const router = useRouter();
 

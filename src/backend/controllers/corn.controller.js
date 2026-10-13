@@ -7,7 +7,7 @@ export async function publishScheduledPostsController(request) {
   const expectedSecret = process.env.CRON_SECRET;
 
   if (!expectedSecret || expectedSecret.trim().length === 0) {
-    console.error("CRON_SECRET is not configured.");
+    
 
     return Response.json(
       {

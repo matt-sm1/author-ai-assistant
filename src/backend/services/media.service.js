@@ -101,7 +101,7 @@ export class MediaService {
           uploaded.resource_type,
         );
       } catch (cleanupError) {
-        console.error("Media upload cleanup failed:", cleanupError);
+       
       }
 
       this.handleDatabaseError(error);
@@ -213,9 +213,10 @@ export class MediaService {
         deletion?.result !== "ok" &&
         deletion?.result !== "not found"
       ) {
-        console.error(
-          "Media asset deletion failed:",
-          media.storage_key,
+        throw new AppError(
+          "Failed to delete media from storage provider",
+          HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          ERROR_CODES.STORAGE_PROVIDER_ERROR,
         );
       }
     } catch (error) {

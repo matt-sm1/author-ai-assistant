@@ -10,7 +10,7 @@ export async function getHealthStatus() {
       database,
     });
   } catch (error) {
-    console.error("Health check failed:", error);
+    
 
     return Response.json(
       {

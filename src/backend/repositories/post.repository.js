@@ -190,10 +190,7 @@ export class PostRepository {
       try {
         await client.query("ROLLBACK");
       } catch (rollbackError) {
-        console.error(
-          "Post transaction rollback failed:",
-          rollbackError
-        );
+       
       }
 
       throw error;
