@@ -39,7 +39,7 @@ async function getValidatedPostId(context) {
 // CREATE POST
 // ============================================
 
-export async function createPostController(request, userId) {
+export async function createPostController(request) {
   try {
     const body = await parseJsonBody(request);
 
@@ -47,12 +47,7 @@ export async function createPostController(request, userId) {
 
     const postService = createPostService();
 
-    const post = await postService.createPost({
-      ...validatedData,
-
-      // Never accept authorId from request body.
-      authorId: userId,
-    });
+    const post = await postService.createPost(validatedData);
 
     return Response.json(
       {

@@ -15,17 +15,17 @@ const SORT_COLUMNS = {
 };
 
 // Allowed fields for partial updates.
-// author_id is deliberately not editable.
 const UPDATE_COLUMNS = {
   title: "title",
   slug: "slug",
   content: "content",
   excerpt: "excerpt",
+  featuredMediaId: "featured_media_id",
   featuredImage: "featured_image",
   status: "status",
-  visibility: "visibility",
   publishedAt: "published_at",
   categoryId: "category_id",
+  authorId: "author_id",
   seoTitle: "seo_title",
   metaDescription: "meta_description",
 };
@@ -39,6 +39,15 @@ const POST_SELECT = `
     p.*,
     c.name AS category_name,
     c.slug AS category_slug,
+    CASE
+      WHEN a.id IS NULL THEN NULL
+      ELSE JSON_BUILD_OBJECT(
+        'id', a.id,
+        'name', a.name,
+        'avatarUrl', a.avatar_url,
+        'isActive', a.is_active
+      )
+    END AS author,
     COALESCE(
       (
         SELECT JSON_AGG(
@@ -57,6 +66,7 @@ const POST_SELECT = `
     ) AS tags
   FROM posts p
   LEFT JOIN categories c ON c.id = p.category_id
+  LEFT JOIN authors a ON a.id = p.author_id
 `;
 
 // ============================================
@@ -94,10 +104,6 @@ function buildFilters(filters = {}) {
 
   if (filters.status) {
     add("p.status = ?", filters.status);
-  }
-
-  if (filters.visibility) {
-    add("p.visibility = ?", filters.visibility);
   }
 
   if (filters.categoryId) {
@@ -154,14 +160,6 @@ function buildSort(sortBy = "created_at", sortOrder = "desc") {
       : "DESC";
 
   return `${column} ${direction} NULLS LAST, p.id DESC`;
-}
-
-function uniqueIds(ids) {
-  if (!Array.isArray(ids) || ids.length === 0) {
-    throw new Error("At least one ID is required.");
-  }
-
-  return [...new Set(ids)];
 }
 
 // ============================================
@@ -263,7 +261,6 @@ export class PostRepository {
     offset = 0,
     search = "",
     status = "",
-    visibility = "",
     categoryId = null,
     authorId = null,
     tagId = null,
@@ -277,7 +274,6 @@ export class PostRepository {
     const { where, values } = buildFilters({
       search,
       status,
-      visibility,
       categoryId,
       authorId,
       tagId,
@@ -368,62 +364,64 @@ export class PostRepository {
   // CREATE POST
   // ============================================
 
-  async create(data, db = this.db) {
-    const {
+  
+async create(data, db = this.db) {
+  const {
+    title,
+    slug,
+    content = null,
+    excerpt = null,
+    featuredMediaId = null,
+    featuredImage = null,
+    status = "draft",
+    publishedAt = null,
+    categoryId = null,
+    authorId,
+    seoTitle = null,
+    metaDescription = null,
+  } = data;
+
+  const result = await db.query(
+    `
+    INSERT INTO posts (
       title,
       slug,
-      content = null,
-      excerpt = null,
-      featuredImage = null,
-      status = "draft",
-      visibility = "public",
-      publishedAt = null,
-      categoryId = null,
+      content,
+      excerpt,
+      featured_media_id,
+      featured_image,
+      status,
+      published_at,
+      category_id,
+      author_id,
+      seo_title,
+      meta_description
+    )
+    VALUES (
+      $1, $2, $3, $4, $5, $6,
+      $7, $8, $9, $10, $11, $12
+    )
+    RETURNING *
+    `,
+    [
+      title,
+      slug,
+      content,
+      excerpt,
+      featuredMediaId,
+      featuredImage,
+      status,
+      publishedAt,
+      categoryId,
       authorId,
-      seoTitle = null,
-      metaDescription = null,
-    } = data;
+      seoTitle,
+      metaDescription,
+    ]
+  );
 
-    const result = await db.query(
-      `
-      INSERT INTO posts (
-        title,
-        slug,
-        content,
-        excerpt,
-        featured_image,
-        status,
-        visibility,
-        published_at,
-        category_id,
-        author_id,
-        seo_title,
-        meta_description
-      )
-      VALUES (
-        $1, $2, $3, $4, $5, $6,
-        $7, $8, $9, $10, $11, $12
-      )
-      RETURNING *
-      `,
-      [
-        title,
-        slug,
-        content,
-        excerpt,
-        featuredImage,
-        status,
-        visibility,
-        publishedAt,
-        categoryId,
-        authorId,
-        seoTitle,
-        metaDescription,
-      ]
-    );
+  return result.rows[0];
+}
 
-    return result.rows[0];
-  }
 
   // ============================================
   // PARTIAL UPDATE
@@ -514,106 +512,6 @@ export class PostRepository {
       `,
       [postId, ids]
     );
-  }
-
-  // ============================================
-  // BULK FIND POSTS
-  // ============================================
-
-  async findByIds(postIds, db = this.db) {
-    const ids = uniqueIds(postIds);
-
-    const result = await db.query(
-      `
-      SELECT *
-      FROM posts
-      WHERE id = ANY($1::uuid[])
-      ORDER BY created_at DESC, id DESC
-      `,
-      [ids]
-    );
-
-    return result.rows;
-  }
-
-  // ============================================
-  // BULK DELETE
-  // ============================================
-
-  async bulkDelete(postIds, db = this.db) {
-    const ids = uniqueIds(postIds);
-
-    const result = await db.query(
-      `
-      DELETE FROM posts
-      WHERE id = ANY($1::uuid[])
-      RETURNING id
-      `,
-      [ids]
-    );
-
-    return result.rows;
-  }
-
-  // ============================================
-  // BULK UPDATE STATUS
-  // ============================================
-
-  async bulkUpdateStatus(
-    postIds,
-    status,
-    publishedAt = null,
-    db = this.db
-  ) {
-    const ids = uniqueIds(postIds);
-
-    const result = await db.query(
-      `
-      UPDATE posts
-      SET
-        status = $2,
-        published_at = CASE
-          WHEN $2::post_status = 'published'
-            THEN CASE
-              WHEN status = 'published'
-                THEN COALESCE(published_at, NOW())
-              ELSE NOW()
-            END
-          WHEN $2::post_status = 'scheduled'
-            THEN $3::timestamptz
-          ELSE published_at
-        END
-      WHERE id = ANY($1::uuid[])
-      RETURNING id, status, published_at
-      `,
-      [ids, status, publishedAt]
-    );
-
-    return result.rows;
-  }
-
-  // ============================================
-  // BULK UPDATE CATEGORY
-  // ============================================
-
-  async bulkUpdateCategory(
-    postIds,
-    categoryId,
-    db = this.db
-  ) {
-    const ids = uniqueIds(postIds);
-
-    const result = await db.query(
-      `
-      UPDATE posts
-      SET category_id = $2
-      WHERE id = ANY($1::uuid[])
-      RETURNING id, category_id
-      `,
-      [ids, categoryId]
-    );
-
-    return result.rows;
   }
 
   // ============================================

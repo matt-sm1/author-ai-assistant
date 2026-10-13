@@ -9,7 +9,7 @@ export const baseApi = createApi({
     credentials: "include",
   }),
 
-  tagTypes: ["Categories", "Tags", "Media", "Posts" , "Auth"],
+  tagTypes: ["Categories", "Tags", "Media", "Posts" , "Auth" , "Authors"],
 
   endpoints: () => ({}),
 });

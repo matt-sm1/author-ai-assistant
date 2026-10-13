@@ -12,29 +12,7 @@ BEGIN
         CREATE TYPE post_status AS ENUM (
             'draft',
             'published',
-            'scheduled',
-            'archived'
-        );
-    END IF;
-END
-$$;
-
-
--- ============================================
--- POST VISIBILITY
--- ============================================
-
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_type
-        WHERE typname = 'post_visibility'
-    ) THEN
-        CREATE TYPE post_visibility AS ENUM (
-            'public',
-            'private',
-            'password'
+            'scheduled'
         );
     END IF;
 END
@@ -77,10 +55,15 @@ CREATE TABLE IF NOT EXISTS posts (
 
     content TEXT,
     excerpt TEXT,
+    
+    featured_media_id UUID
+        REFERENCES media(id)
+        ON DELETE SET NULL,
+
     featured_image TEXT,
 
+
     status post_status NOT NULL DEFAULT 'draft',
-    visibility post_visibility NOT NULL DEFAULT 'public',
 
     published_at TIMESTAMPTZ,
 

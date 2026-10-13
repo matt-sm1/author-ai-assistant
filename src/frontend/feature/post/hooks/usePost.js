@@ -1,4 +1,4 @@
-import { useGetPostByIdQuery } from "../api/post.api";
+import { useGetPostByIdQuery } from "../api/posts.api";
 
 export default function usePost(id) {
   const {

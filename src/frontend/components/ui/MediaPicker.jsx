@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 import { Button } from "@/frontend/components/ui/Button";
 import {
@@ -26,7 +27,7 @@ const MEDIA_FILTERS = [
 export default function MediaPicker({
   open,
   onOpenChange,
-  onSelect = () => {},
+  onSelect = () => { },
 }) {
   const [resourceType, setResourceType] = useState("");
   const [page, setPage] = useState(1);
@@ -65,16 +66,22 @@ export default function MediaPicker({
 
   const hasMore = page < pagination.totalPages;
 
+
   const handleSelect = (item) => {
-    if (!["image", "video"].includes(item?.resource_type) || !item?.url) return;
+    if (!["image", "video"].includes(item?.resource_type) || !item?.url) {
+      return;
+    }
 
     onSelect({
+      id: item.id,
       url: item.url,
       resourceType: item.resource_type,
       thumbnailUrl: item.thumbnail_url ?? "",
     });
+
     onOpenChange(false);
   };
+
 
   const handleOpenChange = (nextOpen) => {
     onOpenChange(nextOpen);
@@ -157,14 +164,16 @@ export default function MediaPicker({
                       className="group relative overflow-hidden rounded-xl border transition hover:border-primary hover:ring-2 hover:ring-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-75"
                     >
                       {previewUrl ? (
-                        <img
+                        <Image
                           src={previewUrl}
                           alt={
                             item.alt_text ||
                             item.filename ||
                             (isVideo ? "Video thumbnail" : "Image")
                           }
-                          loading="lazy"
+                          width={400}
+                          height={300}
+                          sizes="(max-width: 640px) 50vw, 25vw"
                           className="aspect-[4/3] w-full bg-muted object-contain"
                         />
                       ) : (
@@ -212,13 +221,12 @@ export default function MediaPicker({
               loadedMedia.length === 0 && (
                 <EmptyState
                   icon={resourceType === "video" ? Video : ImageIcon}
-                  title={`No ${
-                    resourceType === "video"
+                  title={`No ${resourceType === "video"
                       ? "videos"
                       : resourceType === "image"
                         ? "images"
                         : "media"
-                  } found`}
+                    } found`}
                   text="Your media library doesn't contain any matching items."
                 />
               )}

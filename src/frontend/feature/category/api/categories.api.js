@@ -50,6 +50,7 @@ export const categoriesApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: "Categories", id },
         { type: "Categories", id: "LIST" },
+        "Posts", // saari cached post list/detail queries refresh hongi
       ],
     }),
 
@@ -61,6 +62,7 @@ export const categoriesApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, id) => [
         { type: "Categories", id },
         { type: "Categories", id: "LIST" },
+        "Posts",
       ],
     }),
   }),

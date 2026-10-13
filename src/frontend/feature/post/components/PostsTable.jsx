@@ -7,6 +7,12 @@ import { Panel } from "@/frontend/components/shared/ui-bits";
 import DataTable from "@/frontend/components/shared/DataTable";
 import { fmtDate } from "@/frontend/lib/format";
 
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/frontend/components/ui/Avatar";
+
 export default function PostsTable({
   posts = [],
   loading = false,
@@ -25,25 +31,26 @@ export default function PostsTable({
         <span className="font-medium">{post.title || "Untitled"}</span>
       ),
     },
-
     {
-      key: "visibility",
-      header: "Visibility",
-      render: (post) => {
-        const isPublic = post.visibility === "public";
-
-        return (
-          <span
-            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-              isPublic
-                ? "bg-green-500/10 text-green-600"
-                : "bg-muted text-muted-foreground"
-            }`}
-          >
-            {isPublic ? "Public" : "Private"}
-          </span>
-        );
-      },
+      key: "author",
+      header: "Author",
+      render: (post) =>
+        post.author ? (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage
+                src={post.author.avatarUrl || undefined}
+                alt=""
+              />
+              <AvatarFallback>
+                {post.author.name?.trim()?.charAt(0)?.toUpperCase() || "A"}
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-medium">{post.author.name}</span>
+          </div>
+        ) : (
+          "—"
+        ),
     },
 
     {
@@ -54,16 +61,14 @@ export default function PostsTable({
           draft: "bg-muted text-muted-foreground",
           published: "bg-green-500/10 text-green-600",
           scheduled: "bg-blue-500/10 text-blue-600",
-          archived: "bg-orange-500/10 text-orange-600",
         };
 
         const status = post.status || "draft";
 
         return (
           <span
-            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-              statusStyles[status] || statusStyles.draft
-            }`}
+            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[status] || statusStyles.draft
+              }`}
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
@@ -93,14 +98,16 @@ export default function PostsTable({
       className: "text-right",
       render: (post) => (
         <div className="flex items-center justify-end gap-2">
+
           <Link
-            href={`/admin/post/${post.id}`}
-            title="View post"
-            aria-label={`View ${post.title || "post"}`}
+            href={`/admin/post/single-post/${encodeURIComponent(post.slug)}`}
+            title="Preview post"
+            aria-label={`Preview ${post.title || "post"}`}
             className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Eye className="h-4 w-4" />
           </Link>
+
 
           <Link
             href={`/admin/post/${post.id}/edit`}

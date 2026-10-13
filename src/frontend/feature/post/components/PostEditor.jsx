@@ -6,7 +6,10 @@ import Link from "next/link";
 import { ArrowLeft, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter, useParams } from "next/navigation";
-import { toLocalDateTime } from "@/frontend/lib/format";
+import {
+  karachiDateTimeToISO,
+  toLocalDateTime,
+} from "@/frontend/lib/format";
 import { Button } from "@/frontend/components/ui/Button";
 import { Input } from "@/frontend/components/ui/Input";
 import { Panel, StatusBadge } from "@/frontend/components/shared/ui-bits";
@@ -26,6 +29,7 @@ function getFeaturedMediaType(url) {
     ? "video"
     : "image";
 }
+
 
 export default function PostEditor({ postId: providedPostId }) {
   console.log("POST EDITOR RENDERED", providedPostId);
@@ -57,12 +61,13 @@ export default function PostEditor({ postId: providedPostId }) {
     title: "",
     content: "",
     status: "draft",
-    visibility: "public",
     publishDate: "",
     featuredImage: "",
+    featuredMediaId: null,
     featuredImageType: "image",
     featuredImageThumbnail: "",
     category: "",
+    authorId: "",
     tags: [],
     excerpt: "",
     slug: "",
@@ -77,12 +82,13 @@ export default function PostEditor({ postId: providedPostId }) {
       title: existingPost.title ?? "",
       content: existingPost.content ?? "",
       status: existingPost.status ?? "draft",
-      visibility: existingPost.visibility ?? "public",
       publishDate: toLocalDateTime(existingPost.published_at),
       featuredImage: existingPost.featured_image ?? "",
+      featuredMediaId: existingPost.featured_media_id ?? null,
       featuredImageType: getFeaturedMediaType(existingPost.featured_image),
       featuredImageThumbnail: "",
       category: existingPost.category_id ?? "",
+      authorId: existingPost.author_id ?? "",
       tags: existingPost.tags ?? [],
       excerpt: existingPost.excerpt ?? "",
       slug: existingPost.slug ?? "",
@@ -117,7 +123,7 @@ export default function PostEditor({ postId: providedPostId }) {
       let publishedAt = null;
 
       if (requestedStatus === "scheduled") {
-        publishedAt = formData.publishDate || null;
+        publishedAt = karachiDateTimeToISO(formData.publishDate);
       } else if (requestedStatus === "published") {
         if (
           isEditMode &&
@@ -135,10 +141,11 @@ export default function PostEditor({ postId: providedPostId }) {
         content: formData.content || null,
         excerpt: formData.excerpt || null,
         featuredImage: formData.featuredImage || null,
+        featuredMediaId: formData.featuredMediaId || null,
         status: requestedStatus,
-        visibility: formData.visibility,
         publishedAt,
         categoryId: formData.category || null,
+        authorId: formData.authorId,
         tags: formData.tags.map((tag) => tag.name),
         seoTitle: formData.seoTitle || null,
         metaDescription: formData.metaDescription || null,
@@ -167,7 +174,6 @@ export default function PostEditor({ postId: providedPostId }) {
         draft: "Draft saved successfully.",
         published: "Post published successfully.",
         scheduled: "Post scheduled successfully.",
-        archived: "Post archived successfully.",
       };
 
       toast.success(
@@ -307,11 +313,13 @@ export default function PostEditor({ postId: providedPostId }) {
         <PostSidebar
           post={{
             ...formData,
+            author: existingPost?.author,
             image: formData.featuredImage,
             imageType: formData.featuredImageType,
             imageThumbnail: formData.featuredImageThumbnail,
           }}
           onCategoryChange={(value) => updateField("category", value)}
+          onAuthorChange={(value) => updateField("authorId", value)}
           onTagsChange={(value) => updateField("tags", value)}
           onFieldChange={updateField}
           onOpenMediaPicker={() => setMediaPickerOpen(true)}
@@ -372,9 +380,10 @@ export default function PostEditor({ postId: providedPostId }) {
       <MediaPicker
         open={mediaPickerOpen}
         onOpenChange={setMediaPickerOpen}
-        onSelect={({ url, resourceType, thumbnailUrl }) => {
+        onSelect={({ id, url, resourceType, thumbnailUrl }) => {
           setFormData((previous) => ({
             ...previous,
+            featuredMediaId: id,
             featuredImage: url,
             featuredImageType: resourceType,
             featuredImageThumbnail: thumbnailUrl,

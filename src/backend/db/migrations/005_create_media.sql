@@ -1,3 +1,4 @@
+
 -- ============================================
 -- MEDIA LIBRARY
 -- ============================================
@@ -5,15 +6,12 @@
 CREATE TABLE IF NOT EXISTS media (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
-    -- Storage provider information
     storage_provider TEXT NOT NULL,
     storage_key TEXT NOT NULL,
     provider_asset_id TEXT,
 
-    -- File URL
     url TEXT NOT NULL,
 
-    -- File information
     filename TEXT NOT NULL,
     resource_type TEXT NOT NULL
         CHECK (resource_type IN ('image', 'video')),
@@ -27,18 +25,58 @@ CREATE TABLE IF NOT EXISTS media (
     width INTEGER CHECK (width IS NULL OR width > 0),
     height INTEGER CHECK (height IS NULL OR height > 0),
 
-    -- SEO and media metadata
     alt_text TEXT,
     caption TEXT,
     description TEXT,
 
-    -- Timestamps
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-    -- Prevent duplicate assets within a provider
     UNIQUE (storage_provider, storage_key)
 );
+
+-- ============================================
+-- AUTHOR AND POST MEDIA REFERENCES
+-- ============================================
+
+ALTER TABLE authors
+ADD COLUMN IF NOT EXISTS avatar_media_id UUID;
+
+ALTER TABLE posts
+ADD COLUMN IF NOT EXISTS featured_media_id UUID;
+
+-- ============================================
+-- FOREIGN KEYS
+-- ============================================
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'authors_avatar_media_id_fkey'
+          AND conrelid = 'authors'::regclass
+    ) THEN
+        ALTER TABLE authors
+        ADD CONSTRAINT authors_avatar_media_id_fkey
+        FOREIGN KEY (avatar_media_id)
+        REFERENCES media(id)
+        ON DELETE SET NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'posts_featured_media_id_fkey'
+          AND conrelid = 'posts'::regclass
+    ) THEN
+        ALTER TABLE posts
+        ADD CONSTRAINT posts_featured_media_id_fkey
+        FOREIGN KEY (featured_media_id)
+        REFERENCES media(id)
+        ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- ============================================
 -- INDEXES
@@ -49,6 +87,12 @@ ON media (created_at DESC, id DESC);
 
 CREATE INDEX IF NOT EXISTS idx_media_resource_type
 ON media (resource_type);
+
+CREATE INDEX IF NOT EXISTS idx_authors_avatar_media_id
+ON authors (avatar_media_id);
+
+CREATE INDEX IF NOT EXISTS idx_posts_featured_media_id
+ON posts (featured_media_id);
 
 -- ============================================
 -- UPDATED AT FUNCTION

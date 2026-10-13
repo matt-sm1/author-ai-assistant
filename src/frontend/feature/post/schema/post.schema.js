@@ -1,4 +1,3 @@
-
 import * as yup from "yup";
 
 const nullableText = (max) =>
@@ -34,20 +33,20 @@ export const postSchema = yup.object({
   excerpt: nullableText(2000),
   featuredImage: nullableText(2048),
 
+  featuredMediaId: yup
+    .string()
+    .uuid("Invalid featured media ID.")
+    .nullable()
+    .default(null),
+
   status: yup
     .string()
     .oneOf(
-      ["draft", "published", "scheduled", "archived"],
+      ["draft", "published", "scheduled"],
       "Invalid post status.",
     )
     .default("draft")
     .required("Post status is required."),
-
-  visibility: yup
-    .string()
-    .oneOf(["public", "private"], "Invalid visibility.")
-    .default("public")
-    .required("Visibility is required."),
 
   publishedAt: yup
     .date()
@@ -75,6 +74,11 @@ export const postSchema = yup.object({
     .uuid("Select a valid category.")
     .nullable()
     .default(null),
+
+  authorId: yup
+    .string()
+    .uuid("Select a valid author.")
+    .required("An author is required."),
 
   tags: yup
     .array()

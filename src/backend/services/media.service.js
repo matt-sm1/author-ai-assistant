@@ -29,9 +29,9 @@ export class MediaService {
       thumbnail_url:
         media.storage_provider === currentProvider
           ? this.storageProvider.getThumbnailUrl(
-              media.storage_key,
-              media.resource_type,
-            )
+            media.storage_key,
+            media.resource_type,
+          )
           : null,
     };
   }
@@ -181,31 +181,50 @@ export class MediaService {
   // DELETE MEDIA
   // ============================================
 
+
   async deleteMedia(id) {
     const media = await this.getMediaById(id);
 
-    // Don't delete assets from another provider accidentally.
-    const providerName = process.env.STORAGE_PROVIDER || "cloudinary";
+    const providerName = (
+      process.env.STORAGE_PROVIDER || "cloudinary"
+    ).toLowerCase();
 
-    if (media.storage_provider !== providerName.toLowerCase()) {
-      throw this.badRequest("Media belongs to a different storage provider");
+    if (media.storage_provider !== providerName) {
+      throw this.badRequest(
+        "Media belongs to a different storage provider",
+      );
     }
 
-    const deletion = await this.storageProvider.delete(
-      media.storage_key,
-      media.resource_type,
-    );
-
-    if (deletion?.result !== "ok" && deletion?.result !== "not found") {
-      throw new Error("Storage provider deletion failed");
-    }
-
+    // First clear references and delete the database record.
     try {
-      await this.mediaRepository.delete(id);
+      await this.mediaRepository.deleteWithReferencesCleared(id);
     } catch (error) {
       this.handleDatabaseError(error);
     }
 
+    // Then delete the physical asset.
+    try {
+      const deletion = await this.storageProvider.delete(
+        media.storage_key,
+        media.resource_type,
+      );
+
+      if (
+        deletion?.result !== "ok" &&
+        deletion?.result !== "not found"
+      ) {
+        console.error(
+          "Media asset deletion failed:",
+          media.storage_key,
+        );
+      }
+    } catch (error) {
+      this.handleDatabaseError(error);
+
+    }
+
     return true;
   }
+
+
 }

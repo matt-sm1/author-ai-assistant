@@ -188,4 +188,64 @@ export class MediaRepository {
 
     return result.rows[0] ?? null;
   }
+
+  
+  // ============================================
+  // DELETE MEDIA + CLEAR REFERENCES
+  // ============================================
+
+  async deleteWithReferencesCleared(id) {
+    const client = await this.db.connect();
+
+    try {
+      await client.query("BEGIN");
+
+     await client.query(
+  `UPDATE authors
+   SET avatar_media_id = NULL,
+       avatar_url = NULL
+   WHERE avatar_media_id = $1
+      OR avatar_url = (
+        SELECT url FROM media WHERE id = $1
+      )`,
+  [id],
+);
+
+await client.query(
+  `UPDATE posts
+   SET featured_media_id = NULL,
+       featured_image = NULL
+   WHERE featured_media_id = $1
+      OR featured_image = (
+        SELECT url FROM media WHERE id = $1
+      )`,
+  [id],
+);
+
+      // Delete the media record.
+      const result = await client.query(
+        `
+        DELETE FROM media
+        WHERE id = $1
+        RETURNING id
+        `,
+        [id],
+      );
+
+      if (result.rowCount === 0) {
+        throw new Error("Media not found");
+      }
+
+      await client.query("COMMIT");
+
+      return result.rows[0];
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
 }
+

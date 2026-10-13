@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowDownRight,
@@ -15,7 +16,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-
+import { toast } from "sonner";
 import { Button } from "@/frontend/components/ui/Button";
 import {
   ConfirmDialog,
@@ -50,16 +51,20 @@ export default function DashboardView() {
     "";
 
   async function handleDelete() {
-    if (!toDelete) return;
+  if (!toDelete) return;
 
-    try {
-      await deletePost(toDelete);
-      setToDelete(null);
-    } catch (err) {
-      // RTK Query cache invalidation should refresh the posts list.
-      console.error("Failed to delete post:", err);
-    }
+  try {
+    await deletePost(toDelete);
+    setToDelete(null);
+    toast.success("Post deleted");
+  } catch (err) {
+    console.error("Failed to delete post:", err);
+    toast.error(
+      err?.data?.message || err?.message || "Failed to delete post",
+    );
+    // Dialog khula rehta hai, user dobara try kar sakta hai
   }
+}
 
   const stats = [
     {
@@ -102,9 +107,9 @@ export default function DashboardView() {
           >
             {greeting()}, Admin 👋
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            Here's what's happening with your blog today.
-          </p>
+        <p className="mt-1 text-muted-foreground">
+  Here&apos;s what&apos;s happening with your blog today.
+</p>
         </div>
 
         <Button asChild className="rounded-xl shadow-lift">
@@ -171,32 +176,36 @@ export default function DashboardView() {
                 key={p.id}
                 className="group flex items-center gap-4 px-5 py-3 transition hover:bg-muted/50"
               >
-                <img
-                  src={p.image || p.featured_image || ""}
-                  alt=""
-                  className="h-12 w-16 shrink-0 rounded-lg object-cover"
-                />
-
+               {p.image || p.featured_image ? (
+  <Image
+    src={p.image || p.featured_image}
+    alt=""
+    width={64}
+    height={48}
+    sizes="64px"
+    unoptimized
+    className="h-12 w-16 shrink-0 rounded-lg object-cover"
+  />
+) : (
+  <div className="h-12 w-16 shrink-0 rounded-lg bg-muted" />
+)}
                 <div className="min-w-0 flex-1">
                   <Link
-                    href={`/admin/posts/${p.id}/edit`}
+                    href={`/admin/post/${p.id}/edit`}
                     className="line-clamp-1 text-sm font-semibold hover:text-primary"
                   >
-                    {p.title}
+                    {p.title} 
                   </Link>
 
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-                    <span>{p.author || "Admin"}</span>
-                    ·
+      
                     <span>
-                      {typeof p.category === "string"
-                        ? p.category
-                        : p.category?.name || "Uncategorized"}
+                      {
+                        p.category_name }
                     </span>
                     ·
-                    <span>{fmtDate(p.date ?? p.created_at)}</span>
-                    ·
-                    <span>{fmtNum(p.views || 0)} views</span>
+                    <span>{fmtDate(p.date ?? p.updated_at)}</span>
+                    
                   </div>
                 </div>
 
@@ -209,7 +218,7 @@ export default function DashboardView() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => router.push(`/admin/posts/${p.id}/edit`)}
+                    onClick={() => router.push(`/admin/post/${p.id}/edit`)}
                     aria-label="Edit"
                   >
                     <PenSquare className="h-4 w-4" />

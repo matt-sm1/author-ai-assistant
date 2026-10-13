@@ -7,10 +7,27 @@ import { generateSlug } from "@/backend/utils/slug.util";
 // POST SERVICE
 // ============================================
 
+const PUBLISHABLE_STATUSES = ["published", "scheduled"];
+
+// <p></p> ya <p>&nbsp;</p> jaisa khali TinyMCE output bhi khali maana jaye.
+// Media-only content (img/video/iframe) valid hai.
+function hasContent(html) {
+  if (!html) return false;
+  if (/<(img|video|iframe)\b/i.test(html)) return true;
+
+  const text = String(html)
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .trim();
+
+  return text.length > 0;
+}
+
 export class PostService {
-  constructor(postRepository, tagRepository) {
+  constructor(postRepository, tagRepository, authorRepository) {
     this.postRepository = postRepository;
     this.tagRepository = tagRepository;
+    this.authorRepository = authorRepository;
   }
 
   // ============================================
@@ -71,6 +88,22 @@ export class PostService {
     }
   }
 
+  async validateAuthor(authorId, db, { allowInactive = false } = {}) {
+    if (!authorId) {
+      throw this.badRequest("An author is required");
+    }
+
+    const author = await this.authorRepository.findById(authorId, db);
+
+    if (!author) {
+      throw this.badRequest("Author not found");
+    }
+
+    if (!author.is_active && !allowInactive) {
+      throw this.badRequest("Inactive authors cannot be assigned to posts");
+    }
+  }
+
   // ============================================
   // PREPARE TAGS
   // ============================================
@@ -120,6 +153,18 @@ export class PostService {
   // ============================================
 
   validatePublishing(data) {
+    if (
+      PUBLISHABLE_STATUSES.includes(data.status) &&
+      !hasContent(data.content)
+    ) {
+      throw new AppError(
+        "Validation failed",
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.VALIDATION_ERROR,
+        { content: "Content is required for published or scheduled posts" },
+      );
+    }
+
     if (data.status === "scheduled" && !data.publishedAt) {
       throw this.badRequest("Scheduled posts require publishedAt");
     }
@@ -167,20 +212,17 @@ export class PostService {
   async createPost(postData) {
     const { authorId, tags = [], ...data } = postData;
 
-    if (!authorId) {
-      throw new AppError(
-        "Unauthorized",
-        HTTP_STATUS.UNAUTHORIZED,
-        ERROR_CODES.UNAUTHORIZED,
-      );
-    }
-
     this.validatePublishing(data);
+
+    if (data.status === "published" && !data.publishedAt) {
+      data.publishedAt = new Date();
+    }
 
     const preparedTags = this.prepareTags(tags);
 
     try {
       return await this.postRepository.withTransaction(async (db) => {
+        await this.validateAuthor(authorId, db);
         await this.validateCategory(data.categoryId, db);
 
         const slug = await this.getUniqueSlug(data.title, db);
@@ -212,58 +254,58 @@ export class PostService {
   // Expects an already validated query object
   // (see validateListPostsQuery in post.validator.js).
 
-  async getPosts({
-    page = 1,
-    limit = 20,
-    search = "",
-    status = "",
-    visibility = "",
-    categoryId = null,
-    authorId = null,
-    tagId = null,
-    createdFrom = null,
-    createdTo = null,
-    publishedFrom = null,
-    publishedTo = null,
-    sortBy = "created_at",
-    sortOrder = "desc",
-  } = {}) {
-    const offset = (page - 1) * limit;
+  
+async getPosts({
+  page = 1,
+  limit = 20,
+  search = "",
+  status = "",
+  categoryId = null,
+  authorId = null,
+  tagId = null,
+  createdFrom = null,
+  createdTo = null,
+  publishedFrom = null,
+  publishedTo = null,
+  sortBy = "created_at",
+  sortOrder = "desc",
+} = {}) {
+  const offset = (page - 1) * limit;
 
-    const filters = {
-      search,
-      status,
-      visibility,
-      categoryId,
-      authorId,
-      tagId,
-      createdFrom,
-      createdTo,
-      publishedFrom,
-      publishedTo,
-    };
+  const filters = {
+    search,
+    status,
+    categoryId,
+    authorId,
+    tagId,
+    createdFrom,
+    createdTo,
+    publishedFrom,
+    publishedTo,
+  };
 
-    const [posts, total] = await Promise.all([
-      this.postRepository.findAll({
-        ...filters,
-        limit,
-        offset,
-        sortBy,
-        sortOrder,
-      }),
-      this.postRepository.count(filters),
-    ]);
+  const [posts, total] = await Promise.all([
+    this.postRepository.findAll({
+      ...filters,
+      limit,
+      offset,
+      sortBy,
+      sortOrder,
+    }),
+    this.postRepository.count(filters),
+  ]);
 
-    return {
-      posts,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
+  return {
+    posts,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
 
   // ============================================
   // GET POST BY ID
@@ -277,6 +319,10 @@ export class PostService {
     }
 
     return post;
+  }
+
+  async getPostBySlug(slug) {
+    return this.postRepository.findBySlug(slug);
   }
 
   // ============================================
@@ -296,6 +342,18 @@ export class PostService {
 
         if (!existing) {
           throw this.notFound();
+        }
+
+        await this.validateAuthor(data.authorId, db, {
+          allowInactive: existing.author_id === data.authorId,
+        });
+
+        if (data.status === "published" && !data.publishedAt) {
+          // Pehle se published post ki tarikh preserve karo, warna ab ka waqt
+          data.publishedAt =
+            existing.status === "published"
+              ? (existing.publishedAt ?? existing.published_at ?? new Date())
+              : new Date();
         }
 
         await this.validateCategory(data.categoryId, db);
@@ -324,6 +382,14 @@ export class PostService {
     } catch (error) {
       this.handleDatabaseError(error);
     }
+  }
+
+  // ============================================
+  // PUBLISH DUE SCHEDULED POSTS
+  // ============================================
+
+  async publishScheduledPosts() {
+    return this.postRepository.publishScheduledPosts();
   }
 
   // ============================================

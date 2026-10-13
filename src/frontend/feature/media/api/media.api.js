@@ -90,6 +90,7 @@ export const mediaApi = baseApi.injectEndpoints({
     // DELETE MEDIA
     // ============================================
 
+
     deleteMedia: builder.mutation({
       query: (id) => ({
         url: `/media/${id}`,
@@ -97,10 +98,18 @@ export const mediaApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (result, error, id) => [
+        // Media gallery refresh
         { type: "Media", id },
         { type: "Media", id: "LIST" },
+
+        // Author profile pictures refresh
+        { type: "Authors", id: "LIST" },
+
+        // Posts ke featured images refresh
+        { type: "Posts", id: "LIST" },
       ],
     }),
+
   }),
 });
 

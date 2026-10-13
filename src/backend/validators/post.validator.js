@@ -8,12 +8,7 @@ import { ERROR_CODES } from "@/backend/constants/error-codes";
 // CONSTANTS
 // ============================================
 
-const POST_STATUSES = ["draft", "published", "scheduled", "archived"];
-
-const POST_VISIBILITIES = ["public", "private"];
-
-// Password visibility will be enabled when
-// password protection is implemented.
+const POST_STATUSES = ["draft", "published", "scheduled"];
 
 // Must match the whitelist in post.repository.js
 const SORT_FIELDS = [
@@ -77,17 +72,26 @@ const createPostSchema = yup
 
     excerpt: nullableText(2000),
 
+
+    
+
+    featuredMediaId: yup
+      .string()
+      .uuid("Invalid featured media ID")
+      .nullable()
+      .default(null),
+
+    status: yup
+      .string()
+      .oneOf(POST_STATUSES, "Invalid post status")
+      .default("draft"),
+    
     featuredImage: nullableText(2048),
 
     status: yup
       .string()
       .oneOf(POST_STATUSES, "Invalid post status")
       .default("draft"),
-
-    visibility: yup
-      .string()
-      .oneOf(POST_VISIBILITIES, "Invalid visibility")
-      .default("public"),
 
     publishedAt: yup.date().nullable().default(null),
 
@@ -96,6 +100,11 @@ const createPostSchema = yup
       .uuid("Invalid category ID")
       .nullable()
       .default(null),
+
+    authorId: yup
+      .string()
+      .uuid("Select a valid author.")
+      .required("An author is required."),
 
     tags: tagsSchema,
 
@@ -163,11 +172,6 @@ const listPostsQuerySchema = yup.object({
     .oneOf(POST_STATUSES, "Invalid post status")
     .optional(),
 
-  visibility: yup
-    .string()
-    .transform(emptyToUndefined)
-    .oneOf(POST_VISIBILITIES, "Invalid visibility")
-    .optional(),
 
   categoryId: optionalUuid("category ID"),
   authorId: optionalUuid("author ID"),

@@ -1,6 +1,7 @@
 "use client";
 
 import { Calendar, Eye, FileImage, FileVideo, Play } from "lucide-react";
+import Image from "next/image";
 
 import { cn } from "@/frontend/lib/utils";
 import { fmtDate } from "@/frontend/lib/format";
@@ -30,11 +31,12 @@ export default function MediaCard({ item, onClick }) {
     >
       {/* MEDIA PREVIEW */}
       <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted">
-        <img
+        <Image
           src={previewUrl}
           alt={item.alt_text || item.filename}
-          loading="lazy"
-          className="h-full w-full object-contain"
+          fill
+          sizes="(max-width: 768px) 50vw, 25vw"
+          className="object-contain"
         />
 
         {/* VIDEO PLAY BUTTON */}

@@ -1,4 +1,3 @@
-
 import { baseApi } from "@/frontend/store/api/baseApi";
 
 export const tagsApi = baseApi.injectEndpoints({
@@ -57,6 +56,7 @@ export const tagsApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: "Tags", id },
         { type: "Tags", id: "LIST" },
+        "Posts", // post list/detail mein tag name stale na rahe
       ],
     }),
 
@@ -70,6 +70,7 @@ export const tagsApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, id) => [
         { type: "Tags", id },
         { type: "Tags", id: "LIST" },
+        "Posts", // delete hone par posts se tag hat jata hai
       ],
     }),
   }),

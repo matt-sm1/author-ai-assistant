@@ -10,6 +10,11 @@ export default function PostContentEditor({ value = "", onChange }) {
       onEditorChange={(content) => onChange?.(content)}
       init={{
         height: 500,
+        paste_data_images: true,
+        paste_merge_formats: false,
+        paste_remove_styles_if_webkit: false,
+        paste_webkit_styles: "all",
+        convert_urls: false,
         menubar: "file edit view insert format tools table",
         plugins: [
           "advlist",
@@ -33,8 +38,6 @@ export default function PostContentEditor({ value = "", onChange }) {
           "alignleft aligncenter alignright | " +
           "bullist numlist | link image media table | " +
           "removeformat code",
-        content_style:
-          "body { font-family: Arial, sans-serif; font-size: 16px; line-height: 1.7; }",
       }}
     />
   );

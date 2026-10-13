@@ -2,9 +2,11 @@
 "use client";
 
 import { Image as ImageIcon, X } from "lucide-react";
+import Image from "next/image";
 
 import useCategories from "@/frontend/feature/category/hooks/useCategories";
 import useTags from "@/frontend/feature/tag/hooks/useTags";
+import useAuthors from "@/frontend/feature/author/hooks/useAuthors";
 
 import PostSection from "./PostSection";
 import { Button } from "@/frontend/components/ui/Button";
@@ -42,7 +44,11 @@ function SelectField({
 
         <SelectContent>
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              disabled={option.disabled}
+            >
               {option.label}
             </SelectItem>
           ))}
@@ -57,6 +63,7 @@ export default function PostSidebar({
   onOpenMediaPicker,
   onFeaturedImageRemove,
   onCategoryChange,
+  onAuthorChange,
   onTagsChange,
   onFieldChange,
 }) {
@@ -75,6 +82,22 @@ export default function PostSidebar({
     page: 1,
     limit: 100,
   });
+
+  const {
+    authors,
+    isLoading: isAuthorsLoading,
+    error: authorsError,
+  } = useAuthors({
+    page: 1,
+    limit: 100,
+    sortBy: "name",
+    sortOrder: "asc",
+    activeOnly: true,
+  });
+
+  const selectedAuthorIsMissing =
+    post.authorId &&
+    !authors.some((author) => author.id === post.authorId);
 
   const addTag = (tag) => {
     if (selectedTags.some((item) => String(item.id) === String(tag.id))) {
@@ -96,37 +119,27 @@ export default function PostSidebar({
   return (
     <aside className="space-y-4">
       <PostSection title="Publish">
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField
-            id="post-status"
-            label="Status"
-            placeholder="Choose status"
-            value={post.status ?? "draft"}
-            onChange={(value) => onFieldChange?.("status", value)}
-            options={[
-              { value: "draft", label: "Draft" },
-              { value: "published", label: "Published" },
-              { value: "scheduled", label: "Scheduled" },
-              { value: "archived", label: "Archived" },
-            ]}
-          />
-
-          <SelectField
-            id="post-visibility"
-            label="Visibility"
-            placeholder="Choose visibility"
-            value={post.visibility ?? "public"}
-            onChange={(value) => onFieldChange?.("visibility", value)}
-            options={[
-              { value: "public", label: "Public" },
-              { value: "private", label: "Private" },
-            ]}
-          />
-        </div>
+        <SelectField
+          id="post-status"
+          label="Status"
+          placeholder="Choose status"
+          value={post.status ?? "draft"}
+          onChange={(value) => onFieldChange?.("status", value)}
+          options={[
+            { value: "draft", label: "Draft" },
+            { value: "published", label: "Published" },
+            { value: "scheduled", label: "Scheduled" },
+          ]}
+        />
 
         <div>
-          <Label htmlFor="publish-date" className="text-xs text-muted-foreground">
-            {post.status === "scheduled" ? "Schedule date and time" : "Publish date and time"}
+          <Label
+            htmlFor="publish-date"
+            className="text-xs text-muted-foreground"
+          >
+            {post.status === "scheduled"
+              ? "Schedule date and time"
+              : "Publish date and time"}
           </Label>
 
           <Input
@@ -152,7 +165,7 @@ export default function PostSidebar({
       <PostSection title="Featured Media">
         <div className="space-y-2">
           {post.image ? (
-            <div className="overflow-hidden rounded-xl border">
+            <div className="relative aspect-video overflow-hidden rounded-xl border">
               {post.imageType === "video" ? (
                 <video
                   src={post.image}
@@ -165,10 +178,12 @@ export default function PostSidebar({
                   Your browser does not support the video element.
                 </video>
               ) : (
-                <img
+                <Image
                   src={post.image}
                   alt="Selected featured image"
-                  className="aspect-video w-full object-cover"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 340px"
+                  className="object-cover"
                 />
               )}
             </div>
@@ -199,6 +214,43 @@ export default function PostSidebar({
             </Button>
           )}
         </div>
+      </PostSection>
+
+      <PostSection title="Author">
+        <SelectField
+          id="post-author"
+          label="Author"
+          placeholder={
+            isAuthorsLoading ? "Loading authors..." : "Choose an author"
+          }
+          value={post.authorId ?? ""}
+          onChange={(value) => onAuthorChange?.(value)}
+          disabled={isAuthorsLoading || Boolean(authorsError)}
+          options={[
+            ...(selectedAuthorIsMissing
+              ? [{
+                value: post.authorId,
+                label: `${post.author?.name || "Current author"}${!isAuthorsLoading && !authorsError ? " (inactive)" : ""
+                  }`,
+                disabled: true,
+              }]
+              : []),
+            ...authors.map((author) => ({
+              value: author.id,
+              label: author.name,
+            })),
+          ]}
+        />
+        {authorsError && (
+          <p role="alert" className="mt-2 text-xs text-destructive">
+            Unable to load authors: {authorsError}
+          </p>
+        )}
+        {!isAuthorsLoading && !authorsError && authors.length === 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            No active authors. Add or activate an author first.
+          </p>
+        )}
       </PostSection>
 
       <PostSection title="Category">
@@ -327,7 +379,7 @@ export default function PostSidebar({
         </div>
       </PostSection>
 
-    
+
     </aside>
   );
 }
