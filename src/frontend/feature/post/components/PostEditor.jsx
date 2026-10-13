@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useGetPostByIdQuery } from "@/frontend/feature/post/api/posts.api";
 import Link from "next/link";
 import { ArrowLeft, Eye } from "lucide-react";
@@ -44,50 +44,66 @@ export default function PostEditor({ postId: providedPostId }) {
     data: existingPost,
     isLoading: isPostLoading,
     isError: isPostError,
-    error: postError,
   } = useGetPostByIdQuery(postId, {
     skip: !isEditMode,
   });
 
+  if (isEditMode && isPostLoading) {
+    return (
+      <div className="p-6 text-sm text-muted-foreground">Loading post...</div>
+    );
+  }
+
+  if (isEditMode && isPostError) {
+    return (
+      <div className="space-y-3 p-6">
+        <p>Unable to load this post.</p>
+        <Button onClick={() => router.push("/admin/post")}>
+          Back to Posts
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <PostEditorForm
+      key={postId ?? "new-post"}
+      postId={postId}
+      isEditMode={isEditMode}
+      existingPost={existingPost}
+      isPostLoading={isPostLoading}
+      router={router}
+    />
+  );
+}
+
+function PostEditorForm({
+  postId,
+  isEditMode,
+  existingPost,
+  isPostLoading,
+  router,
+}) {
+
   const [formData, setFormData] = useState({
-    title: "",
-    content: "",
-    status: "draft",
-    publishDate: "",
-    featuredImage: "",
-    featuredMediaId: null,
-    featuredImageType: "image",
+    title: existingPost?.title ?? "",
+    content: existingPost?.content ?? "",
+    status: existingPost?.status ?? "draft",
+    publishDate: existingPost
+      ? toLocalDateTime(existingPost.published_at)
+      : "",
+    featuredImage: existingPost?.featured_image ?? "",
+    featuredMediaId: existingPost?.featured_media_id ?? null,
+    featuredImageType: getFeaturedMediaType(existingPost?.featured_image),
     featuredImageThumbnail: "",
-    category: "",
-    authorId: "",
-    tags: [],
-    excerpt: "",
-    slug: "",
-    seoTitle: "",
-    metaDescription: "",
+    category: existingPost?.category_id ?? "",
+    authorId: existingPost?.author_id ?? "",
+    tags: existingPost?.tags ?? [],
+    excerpt: existingPost?.excerpt ?? "",
+    slug: existingPost?.slug ?? "",
+    seoTitle: existingPost?.seo_title ?? "",
+    metaDescription: existingPost?.meta_description ?? "",
   });
-
-  useEffect(() => {
-    if (!existingPost || !isEditMode) return;
-
-    setFormData({
-      title: existingPost.title ?? "",
-      content: existingPost.content ?? "",
-      status: existingPost.status ?? "draft",
-      publishDate: toLocalDateTime(existingPost.published_at),
-      featuredImage: existingPost.featured_image ?? "",
-      featuredMediaId: existingPost.featured_media_id ?? null,
-      featuredImageType: getFeaturedMediaType(existingPost.featured_image),
-      featuredImageThumbnail: "",
-      category: existingPost.category_id ?? "",
-      authorId: existingPost.author_id ?? "",
-      tags: existingPost.tags ?? [],
-      excerpt: existingPost.excerpt ?? "",
-      slug: existingPost.slug ?? "",
-      seoTitle: existingPost.seo_title ?? "",
-      metaDescription: existingPost.meta_description ?? "",
-    });
-  }, [existingPost, isEditMode]);
 
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const { createPost, updatePost, isCreating, isUpdating } = usePostMutations();
@@ -193,22 +209,6 @@ export default function PostEditor({ postId: providedPostId }) {
     }
   };
 
-  if (isEditMode && isPostLoading) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">Loading post...</div>
-    );
-  }
-
-  if (isEditMode && isPostError) {
-    return (
-      <div className="space-y-3 p-6">
-        <p>Unable to load this post.</p>
-        <Button onClick={() => router.push("/admin/post")}>
-          Back to Posts
-        </Button>
-      </div>
-    );
-  }
   return (
     <div className="mx-auto w-full max-w-screen-2xl">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">

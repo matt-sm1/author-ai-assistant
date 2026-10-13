@@ -1,4 +1,4 @@
-import { publishScheduledPostsController } from "@/backend/controllers/corn.controller";
+import { publishScheduledPostsController } from "@/backend/controllers/cron.controller";
 
 export const runtime = "nodejs";
 

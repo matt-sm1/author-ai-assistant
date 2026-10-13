@@ -29,28 +29,31 @@ const Avatar = React.forwardRef(({ className, children, ...props }, ref) => {
 Avatar.displayName = "Avatar";
 
 const AvatarImage = React.forwardRef(
-  ({ className, onLoad, onError, ...props }, ref) => {
+  ({ className, onLoad, onError, alt = "", src, ...props }, ref) => {
     const context = React.useContext(AvatarContext);
+    const setImageLoaded = context?.setImageLoaded;
 
     React.useEffect(() => {
-      context?.setImageLoaded(false);
-    }, [context?.setImageLoaded, props.src]);
+      setImageLoaded?.(false);
+    }, [setImageLoaded, src]);
 
-    if (!props.src) return null;
+    if (!src) return null;
 
     return (
       <Image
         ref={ref}
+        src={src}
         fill
         sizes="40px"
         unoptimized
+        alt={alt}
         className={cn("object-cover", className)}
         onLoad={(event) => {
-          context?.setImageLoaded(true);
+          setImageLoaded?.(true);
           onLoad?.(event);
         }}
         onError={(event) => {
-          context?.setImageLoaded(false);
+          setImageLoaded?.(false);
           onError?.(event);
         }}
         {...props}

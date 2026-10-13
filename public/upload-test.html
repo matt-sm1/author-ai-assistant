@@ -1,127 +1,214 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Media Upload Test</title>
-</head>
-<body>
-  <h2>Media Upload Test</h2>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Media API Test Bench</title>
+    <style>
+      :root { color-scheme: light; font: 15px/1.5 system-ui, sans-serif; color: #172033; background: #f4f6fa; }
+      * { box-sizing: border-box; }
+      body { max-width: 960px; margin: 32px auto; padding: 0 16px 40px; }
+      h1 { margin-bottom: 4px; }
+      p { color: #5d6678; }
+      section { margin: 18px 0; padding: 20px; border: 1px solid #dce1ea; border-radius: 12px; background: white; }
+      h2 { margin: 0 0 12px; font-size: 18px; }
+      button, select, input, textarea { font: inherit; }
+      button { padding: 8px 12px; border: 1px solid #c7cfdd; border-radius: 8px; background: #fff; cursor: pointer; }
+      button:disabled { opacity: .5; cursor: wait; }
+      input[type="file"] { display: block; margin: 10px 0; }
+      input[type="text"], textarea, select { width: 100%; margin: 5px 0 12px; padding: 8px; border: 1px solid #c7cfdd; border-radius: 7px; }
+      textarea { min-height: 70px; }
+      label { display: block; margin-top: 8px; font-weight: 600; }
+      .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+      .muted { font-size: 13px; color: #687386; }
+      .danger { border-color: #e4aaaa; color: #a32626; }
+      #preview { display: block; max-width: min(100%, 500px); max-height: 320px; margin-top: 12px; border-radius: 8px; }
+      #report { padding-left: 22px; }
+      #report li { margin: 4px 0; }
+      #output { min-height: 80px; max-height: 340px; overflow: auto; padding: 12px; border-radius: 8px; background: #101827; color: #d6e2f3; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .status { font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <h1>Media API Test Bench</h1>
+    <p>Same-origin checks for upload, library listing, fetching a media item, metadata update, and deleting the test upload. Sign in to the app first.</p>
 
-<input
-  type="file"
-  id="file"
-  accept="image/jpeg,image/png,video/mp4,video/webm,video/quicktime"
-/>  <button onclick="uploadMedia()">Upload Image</button>
+    <section>
+      <h2>1. Upload image or video</h2>
+      <input id="file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/quicktime" />
+      <p class="muted">Allowed images up to 10 MB; MP4, WebM, and QuickTime videos up to 100 MB.</p>
+      <div class="row"><button id="upload">Upload selected file</button><span id="file-info" class="muted"></span></div>
+      <img id="preview" alt="Selected upload preview" hidden />
+      <video id="video-preview" controls hidden style="display:block;max-width:min(100%,500px);max-height:320px;margin-top:12px"></video>
+    </section>
 
-  <pre id="result"></pre>
+    <section>
+      <h2>2. List media and pagination</h2>
+      <div class="row">
+        <select id="filter" aria-label="Filter media type" style="width:auto;margin:0">
+          <option value="">All media</option><option value="image">Images</option><option value="video">Videos</option>
+        </select>
+        <button id="list">Load first page</button><button id="next-page">Next page</button>
+        <span id="page-info" class="muted"></span>
+      </div>
+      <ul id="media-list"></ul>
+    </section>
 
-  <script>
-    async function uploadMedia() {
-      const file = document.getElementById("file").files[0];
-      const output = document.getElementById("result");
+    <section>
+      <h2>3. Selected media: fetch details and update metadata</h2>
+      <p id="selected-info" class="muted">Upload a file or choose an item from the list above.</p>
+      <label for="alt-text">Alt text</label><input id="alt-text" type="text" maxlength="255" />
+      <label for="caption">Caption</label><input id="caption" type="text" maxlength="500" />
+      <label for="description">Description</label><textarea id="description" maxlength="2000"></textarea>
+      <div class="row"><button id="get-item" disabled>Fetch selected item</button><button id="update" disabled>Save metadata</button><button id="delete" class="danger" disabled>Delete test upload</button></div>
+      <p class="muted">Delete is enabled only for the item uploaded in this page session.</p>
+    </section>
 
-      if (!file) {
-        output.textContent = "Please select an image";
-        return;
+    <section>
+      <h2>Test report</h2>
+      <ul id="report"><li>Waiting for tests.</li></ul>
+      <pre id="output">API responses and errors will appear here.</pre>
+    </section>
+
+    <script>
+      const MAX_IMAGE = 10 * 1024 * 1024;
+      const MAX_VIDEO = 100 * 1024 * 1024;
+      const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
+      const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
+      let selected = null;
+      let uploadedId = null;
+      let page = 1;
+      let totalPages = 1;
+      const report = new Map();
+      const $ = (id) => document.getElementById(id);
+
+      function record(name, ok, detail = "") {
+        report.set(name, { ok, detail });
+        $("report").innerHTML = [...report.entries()].map(([label, result]) =>
+          `<li><span class="status">${result.ok ? "PASS" : "FAIL"}</span> — ${escapeHtml(label)}${result.detail ? `: ${escapeHtml(result.detail)}` : ""}</li>`
+        ).join("");
       }
 
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const response = await fetch("/api/media", {
-          method: "POST",
-          body: formData,
-          credentials: "same-origin",
-        });
-
-        output.textContent =
-          "HTTP Status: " + response.status + "\n" +
-          JSON.stringify(await response.json(), null, 2);
-      } catch (error) {
-        output.textContent = "Error: " + error.message;
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
       }
-    }
-  </script>
 
-  
-<hr />
+      async function request(url, options = {}) {
+        const response = await fetch(url, { credentials: "same-origin", ...options });
+        const text = await response.text();
+        let body;
+        try { body = text ? JSON.parse(text) : {}; } catch { body = { raw: text }; }
+        $("output").textContent = `HTTP ${response.status} ${response.statusText}\n${JSON.stringify(body, null, 2)}`;
+        if (!response.ok) throw new Error(body.message || body.error || `HTTP ${response.status}`);
+        return body;
+      }
 
-<h3>Update Image Metadata</h3>
+      function selectMedia(item, fromThisUpload = false) {
+        selected = item;
+        if (fromThisUpload) uploadedId = item.id;
+        $("selected-info").textContent = `${item.filename || item.original_filename || item.id} · ${item.resource_type || "unknown type"} · ID: ${item.id}`;
+        $("alt-text").value = item.alt_text || "";
+        $("caption").value = item.caption || "";
+        $("description").value = item.description || "";
+        $("get-item").disabled = !item.id;
+        $("update").disabled = !item.id;
+        $("delete").disabled = !item.id || item.id !== uploadedId;
+      }
 
-<button onclick="testMetadataUpdate()">
-  Update Metadata
-</button>
-
-<pre id="metadata-result"></pre>
-
-<script>
-  async function testMetadataUpdate() {
-    const mediaId = "4b5dae4e-3b23-4054-aa6f-291b480298b4";
-
-    const output = document.getElementById("metadata-result");
-
-    try {
-      const response = await fetch(`/api/media/${mediaId}`, {
-        method: "PATCH",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          alt_text: "Brown leather jacket",
-          caption: "Men's leather jacket",
-          description: "Image used in a leather jacket blog post",
-        }),
+      $("file").addEventListener("change", () => {
+        const file = $("file").files[0];
+        $("preview").hidden = true;
+        $("video-preview").hidden = true;
+        if (!file) { $("file-info").textContent = ""; return; }
+        $("file-info").textContent = `${file.name} · ${file.type || "unknown MIME type"} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+        const url = URL.createObjectURL(file);
+        if (file.type.startsWith("image/")) { $("preview").src = url; $("preview").hidden = false; }
+        else if (file.type.startsWith("video/")) { $("video-preview").src = url; $("video-preview").hidden = false; }
       });
 
-      output.textContent =
-        "HTTP Status: " + response.status + "\n" +
-        JSON.stringify(await response.json(), null, 2);
-    } catch (error) {
-      output.textContent = "Error: " + error.message;
-    }
-  }
-</script>
-
-<hr />
-
-<h3>Delete Test Media</h3>
-
-<button onclick="testMediaDelete()">
-  Delete Test Image
-</button>
-
-<pre id="delete-result"></pre>
-
-<script>
-  async function testMediaDelete() {
-    // Temporary PNG image uploaded during testing.
-    const mediaId = "9c330bee-0567-4e55-a69e-819a369c7daa";
-
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this media? This action cannot be undone."
-    );
-
-    if (!confirmed) return;
-
-    const output = document.getElementById("delete-result");
-
-    try {
-      const response = await fetch(`/api/media/${mediaId}`, {
-        method: "DELETE",
-        credentials: "same-origin",
+      $("upload").addEventListener("click", async () => {
+        const file = $("file").files[0];
+        if (!file) { record("Upload file validation", false, "Select an image or video first"); return; }
+        const isImage = IMAGE_TYPES.includes(file.type);
+        const isVideo = VIDEO_TYPES.includes(file.type);
+        const valid = (isImage && file.size > 0 && file.size <= MAX_IMAGE) || (isVideo && file.size > 0 && file.size <= MAX_VIDEO);
+        record("Client file validation", valid, valid ? `${file.type}, ${file.size} bytes` : "Unsupported MIME type or file size");
+        if (!valid) return;
+        const button = $("upload"); button.disabled = true;
+        try {
+          const form = new FormData(); form.append("file", file);
+          const body = await request("/api/media", { method: "POST", body: form });
+          const item = body.data;
+          if (!item?.id || !item?.url) throw new Error("Upload response is missing media ID or URL");
+          record("Upload API", true, `HTTP 201; ${item.resource_type || file.type}; ${item.id}`);
+          selectMedia(item, true);
+          await loadPage(1);
+        } catch (error) { record("Upload API", false, error.message); }
+        finally { button.disabled = false; }
       });
 
-      output.textContent =
-        "HTTP Status: " + response.status + "\n" +
-        JSON.stringify(await response.json(), null, 2);
-    } catch (error) {
-      output.textContent = "Error: " + error.message;
-    }
-  }
-</script>
+      async function loadPage(nextPage) {
+        page = nextPage;
+        const query = new URLSearchParams({ page: String(page), limit: "5", resourceType: $("filter").value });
+        try {
+          const body = await request(`/api/media?${query}`);
+          const items = body.data || [];
+          const pagination = body.pagination || {};
+          totalPages = pagination.totalPages || 1;
+          $("page-info").textContent = `Page ${page} of ${totalPages} · ${pagination.total ?? items.length} total`;
+          $("next-page").disabled = page >= totalPages;
+          $("media-list").innerHTML = items.map((item) => `<li><button type="button" data-id="${escapeHtml(item.id)}">${escapeHtml(item.filename || item.id)} (${escapeHtml(item.resource_type || "unknown")})</button></li>`).join("") || "<li>No media found.</li>";
+          $("media-list").querySelectorAll("button[data-id]").forEach((button) => button.addEventListener("click", () => {
+            const item = items.find((entry) => entry.id === button.dataset.id);
+            if (item) selectMedia(item, item.id === uploadedId);
+          }));
+          record("Media list API / pagination", Array.isArray(body.data) && Boolean(body.pagination), `page ${page}/${totalPages}; ${items.length} returned`);
+        } catch (error) { record("Media list API / pagination", false, error.message); }
+      }
 
-</body>
+      $("list").addEventListener("click", () => loadPage(1));
+      $("next-page").addEventListener("click", () => { if (page < totalPages) loadPage(page + 1); });
+      $("filter").addEventListener("change", () => loadPage(1));
+
+      $("get-item").addEventListener("click", async () => {
+        if (!selected?.id) return;
+        try {
+          const body = await request(`/api/media/${encodeURIComponent(selected.id)}`);
+          if (!body.data?.id) throw new Error("Response does not contain a media item");
+          selectMedia(body.data, body.data.id === uploadedId);
+          record("Fetch media by ID", true, body.data.id);
+        } catch (error) { record("Fetch media by ID", false, error.message); }
+      });
+
+      $("update").addEventListener("click", async () => {
+        if (!selected?.id) return;
+        try {
+          const body = await request(`/api/media/${encodeURIComponent(selected.id)}`, {
+            method: "PATCH", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ alt_text: $("alt-text").value, caption: $("caption").value, description: $("description").value }),
+          });
+          selectMedia(body.data || selected, selected.id === uploadedId);
+          record("Update metadata API", true, selected.id);
+          await loadPage(page);
+        } catch (error) { record("Update metadata API", false, error.message); }
+      });
+
+      $("delete").addEventListener("click", async () => {
+        if (!selected?.id || selected.id !== uploadedId) return;
+        if (!window.confirm(`Permanently delete the test upload ${selected.filename || selected.id}?`)) return;
+        const id = selected.id;
+        try {
+          await request(`/api/media/${encodeURIComponent(id)}`, { method: "DELETE" });
+          record("Delete this session's test upload", true, id);
+          selected = null; uploadedId = null;
+          $("selected-info").textContent = "Test upload deleted.";
+          $("get-item").disabled = true; $("update").disabled = true; $("delete").disabled = true;
+          await loadPage(page);
+        } catch (error) { record("Delete this session's test upload", false, error.message); }
+      });
+
+      $("next-page").disabled = true;
+      loadPage(1);
+    </script>
+  </body>
 </html>

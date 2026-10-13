@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import Image from "next/image";
 
 import { Button } from "@/frontend/components/ui/Button";
@@ -24,20 +24,50 @@ const MEDIA_FILTERS = [
   { label: "Videos", value: "video" },
 ];
 
+const initialState = {
+  resourceType: "",
+  page: 1,
+  loadedMedia: [],
+};
+
+function mediaPickerReducer(state, action) {
+  switch (action.type) {
+    case "filterChanged":
+      return {
+        resourceType: action.resourceType,
+        page: 1,
+        loadedMedia: [],
+      };
+    case "pageLoaded": {
+      const items =
+        action.page === 1
+          ? action.media
+          : [...state.loadedMedia, ...action.media];
+      const uniqueItems = new Map();
+
+      items.forEach((item) => {
+        const key = item.id ?? item.url;
+        if (key != null) uniqueItems.set(key, item);
+      });
+
+      return { ...state, loadedMedia: Array.from(uniqueItems.values()) };
+    }
+    case "loadMore":
+      return { ...state, page: state.page + 1 };
+    case "closed":
+      return initialState;
+    default:
+      return state;
+  }
+}
+
 export default function MediaPicker({
   open,
   onOpenChange,
   onSelect = () => { },
 }) {
-  const [resourceType, setResourceType] = useState("");
-  const [page, setPage] = useState(1);
-  const [loadedMedia, setLoadedMedia] = useState([]);
-
-  // Reset pagination and accumulated results when filter changes.
-  useEffect(() => {
-    setPage(1);
-    setLoadedMedia([]);
-  }, [resourceType]);
+  const [state, dispatch] = useReducer(mediaPickerReducer, initialState);
+  const { resourceType, page, loadedMedia } = state;
 
   const { media, pagination, isLoading, isFetching, error, refetch } = useMedia(
     {
@@ -51,17 +81,7 @@ export default function MediaPicker({
   useEffect(() => {
     if (isFetching || error) return;
 
-    setLoadedMedia((previous) => {
-      const items = page === 1 ? media : [...previous, ...media];
-      const uniqueItems = new Map();
-
-      items.forEach((item) => {
-        const key = item.id ?? item.url;
-        if (key != null) uniqueItems.set(key, item);
-      });
-
-      return Array.from(uniqueItems.values());
-    });
+    dispatch({ type: "pageLoaded", page, media });
   }, [media, page, isFetching, error]);
 
   const hasMore = page < pagination.totalPages;
@@ -87,16 +107,14 @@ export default function MediaPicker({
     onOpenChange(nextOpen);
 
     if (!nextOpen) {
-      setResourceType("");
-      setPage(1);
-      setLoadedMedia([]);
+      dispatch({ type: "closed" });
     }
   };
 
   const handleFilterChange = (nextType) => {
     if (nextType === resourceType) return;
 
-    setResourceType(nextType);
+    dispatch({ type: "filterChanged", resourceType: nextType });
   };
 
   return (
@@ -246,7 +264,7 @@ export default function MediaPicker({
                 variant="outline"
                 className="rounded-lg"
                 disabled={isFetching}
-                onClick={() => setPage((previous) => previous + 1)}
+                onClick={() => dispatch({ type: "loadMore" })}
               >
                 {isFetching ? "Loading..." : "Load More"}
               </Button>
