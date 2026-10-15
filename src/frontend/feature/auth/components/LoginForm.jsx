@@ -40,12 +40,12 @@ export default function LoginForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email or username</Label>
           <Input
             id="email"
-            type="email"
-            placeholder="you@example.com"
-            autoComplete="email"
+            type="text"
+            placeholder="admin"
+            autoComplete="username"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />

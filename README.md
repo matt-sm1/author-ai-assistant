@@ -9,13 +9,15 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for the target trust model (server sess
 Public self-registration is disabled. Create the first admin via env:
 
 ```bash
-# .env.local (required)
+# .env.local (required) — see .env.example
 DATABASE_URL=postgresql://...
-BOOTSTRAP_ADMIN_EMAIL=admin@example.com
-BOOTSTRAP_ADMIN_PASSWORD=your-secure-password
+BOOTSTRAP_ADMIN_EMAIL=admin
+BOOTSTRAP_ADMIN_PASSWORD=admin123
 BOOTSTRAP_ADMIN_NAME=Admin
 # plus Cloudinary / JWT_SECRET / CRON_SECRET as needed
 ```
+
+Login with username **`admin`** and password **`admin123`** (after bootstrap). Change these in production.
 
 ```bash
 npm install
