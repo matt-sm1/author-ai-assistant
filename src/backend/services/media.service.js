@@ -195,14 +195,8 @@ export class MediaService {
       );
     }
 
-    // First clear references and delete the database record.
-    try {
-      await this.mediaRepository.deleteWithReferencesCleared(id);
-    } catch (error) {
-      this.handleDatabaseError(error);
-    }
-
-    // Then delete the physical asset.
+    // Storage first so a failed provider delete never leaves orphaned DB rows
+    // without a recoverable asset. "not found" on storage is treated as success.
     try {
       const deletion = await this.storageProvider.delete(
         media.storage_key,
@@ -220,8 +214,17 @@ export class MediaService {
         );
       }
     } catch (error) {
+      if (error instanceof AppError) throw error;
       this.handleDatabaseError(error);
+    }
 
+    try {
+      await this.mediaRepository.deleteWithReferencesCleared(id);
+    } catch (error) {
+      if (error?.message === "Media not found") {
+        throw this.notFound();
+      }
+      this.handleDatabaseError(error);
     }
 
     return true;

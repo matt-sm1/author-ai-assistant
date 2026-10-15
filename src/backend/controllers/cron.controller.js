@@ -1,20 +1,17 @@
-import { timingSafeEqual } from "node:crypto";
-
 import { createPostService } from "@/backend/factories/post.factory";
 import { handleError } from "@/backend/errors/error-handler";
+import { secretsEqual } from "@/backend/lib/secure-compare";
 
 export async function publishScheduledPostsController(request) {
   const expectedSecret = process.env.CRON_SECRET;
 
   if (!expectedSecret || expectedSecret.trim().length === 0) {
-    
-
     return Response.json(
       {
         success: false,
         message: "Cron endpoint is not configured.",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 
@@ -23,26 +20,18 @@ export async function publishScheduledPostsController(request) {
     ? authorization.slice("Bearer ".length)
     : "";
 
-  const expectedBytes = Buffer.from(expectedSecret, "utf8");
-  const suppliedBytes = Buffer.from(suppliedSecret, "utf8");
-
-  const isAuthorized =
-    expectedBytes.length === suppliedBytes.length &&
-    timingSafeEqual(expectedBytes, suppliedBytes);
-
-  if (!isAuthorized) {
+  if (!secretsEqual(expectedSecret, suppliedSecret)) {
     return Response.json(
       {
         success: false,
         message: "Unauthorized.",
       },
-      { status: 401 },
+      { status: 401 }
     );
   }
 
   try {
-    const publishedPosts =
-      await createPostService().publishScheduledPosts();
+    const publishedPosts = await createPostService().publishScheduledPosts();
 
     return Response.json({
       success: true,

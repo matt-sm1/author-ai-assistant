@@ -1,12 +1,14 @@
 import pool from "@/backend/lib/db";
 
+const PUBLIC_USER_COLUMNS = `id, name, email, role, status, created_at, updated_at`;
+
 export class UserRepository {
-  async create({ name, email, passwordHash }) {
+  async create({ name, email, passwordHash, role = "editor" }) {
     const result = await pool.query(
-      `INSERT INTO users (name, email, password)
-       VALUES ($1, $2, $3)
-       RETURNING id, name, email, created_at, updated_at`,
-      [name, email, passwordHash]
+      `INSERT INTO users (name, email, password_hash, role, status)
+       VALUES ($1, $2, $3, $4, 'active')
+       RETURNING ${PUBLIC_USER_COLUMNS}`,
+      [name, email, passwordHash, role]
     );
 
     return result.rows[0];
@@ -14,7 +16,7 @@ export class UserRepository {
 
   async findByEmail(email) {
     const result = await pool.query(
-      `SELECT id, name, email, password AS password_hash
+      `SELECT id, name, email, password_hash, role, status
        FROM users
        WHERE email = $1
        LIMIT 1`,
@@ -26,7 +28,7 @@ export class UserRepository {
 
   async findById(id) {
     const result = await pool.query(
-      `SELECT id, name, email
+      `SELECT ${PUBLIC_USER_COLUMNS}
        FROM users
        WHERE id = $1
        LIMIT 1`,
@@ -34,5 +36,15 @@ export class UserRepository {
     );
 
     return result.rows[0] ?? null;
+  }
+
+  async countAdmins() {
+    const result = await pool.query(
+      `SELECT COUNT(*)::int AS count
+       FROM users
+       WHERE role = 'admin' AND status = 'active'`
+    );
+
+    return result.rows[0]?.count ?? 0;
   }
 }

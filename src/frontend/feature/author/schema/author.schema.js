@@ -48,6 +48,7 @@ export const createAuthorSchema = yup
     email: emailField,
     bio: bioField,
     avatar_url: avatarUrlField,
+    avatar_media_id: yup.string().uuid().nullable().optional(),
   })
   .required();
 
@@ -61,6 +62,7 @@ export const updateAuthorSchema = yup
     email: emailField,
     bio: bioField,
     avatar_url: avatarUrlField,
+    avatar_media_id: yup.string().uuid().nullable().optional(),
     is_active: yup
       .boolean()
       .optional()

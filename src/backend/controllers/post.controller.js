@@ -12,6 +12,7 @@ import {
   validatePostId,
   validateListPostsQuery,
 } from "@/backend/validators/post.validator";
+import { assertSafePagination } from "@/backend/lib/pagination";
 
 // ============================================
 // REQUEST HELPERS
@@ -78,14 +79,7 @@ export async function getPostsController(request) {
       Object.fromEntries(searchParams)
     );
 
-    // Guard against huge page numbers producing an unsafe OFFSET.
-    if (!Number.isSafeInteger((query.page - 1) * query.limit)) {
-      throw new AppError(
-        "Invalid pagination parameters",
-        HTTP_STATUS.BAD_REQUEST,
-        ERROR_CODES.VALIDATION_ERROR
-      );
-    }
+    assertSafePagination(query.page, query.limit);
 
     const postService = createPostService();
 

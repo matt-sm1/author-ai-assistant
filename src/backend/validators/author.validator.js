@@ -63,6 +63,12 @@ const authorSchema = yup
           }
         }
       ),
+
+    avatar_media_id: yup
+      .string()
+      .uuid("Invalid avatar media ID")
+      .nullable()
+      .optional(),
   })
   .required();
 
@@ -79,6 +85,8 @@ const authorUpdateSchema = yup
     bio: authorSchema.fields.bio,
 
     avatar_url: authorSchema.fields.avatar_url,
+
+    avatar_media_id: authorSchema.fields.avatar_media_id,
 
     is_active: yup
       .boolean()

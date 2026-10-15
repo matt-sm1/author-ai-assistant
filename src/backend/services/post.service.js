@@ -2,12 +2,14 @@ import { AppError } from "@/backend/errors/app-error";
 import { HTTP_STATUS } from "@/backend/constants/http-status";
 import { ERROR_CODES } from "@/backend/constants/error-codes";
 import { generateSlug } from "@/backend/utils/slug.util";
+import {
+  applyPublishingPolicy,
+  assertFeaturedMediaAllowed,
+} from "@/backend/policies/content.policies";
 
 // ============================================
 // POST SERVICE
 // ============================================
-
-const PUBLISHABLE_STATUSES = ["published", "scheduled"];
 
 // <p></p> ya <p>&nbsp;</p> jaisa khali TinyMCE output bhi khali maana jaye.
 // Media-only content (img/video/iframe) valid hai.
@@ -24,10 +26,11 @@ function hasContent(html) {
 }
 
 export class PostService {
-  constructor(postRepository, tagRepository, authorRepository) {
+  constructor(postRepository, tagRepository, authorRepository, mediaRepository) {
     this.postRepository = postRepository;
     this.tagRepository = tagRepository;
     this.authorRepository = authorRepository;
+    this.mediaRepository = mediaRepository;
   }
 
   // ============================================
@@ -133,19 +136,20 @@ export class PostService {
     const tagIds = [];
 
     for (const { name, slug } of preparedTags) {
-      const existingTag = await this.tagRepository.findByName(name, db);
-
-      if (existingTag) {
-        tagIds.push(existingTag.id);
-        continue;
-      }
-
-      const createdTag = await this.tagRepository.create({ name, slug }, db);
-
-      tagIds.push(createdTag.id);
+      const tag = await this.tagRepository.upsertBySlug({ name, slug }, db);
+      tagIds.push(tag.id);
     }
 
     return [...new Set(tagIds)];
+  }
+
+  async validateFeaturedMedia(featuredMediaId, db) {
+    if (featuredMediaId == null || featuredMediaId === "") {
+      return;
+    }
+
+    const media = await this.mediaRepository.findById(featuredMediaId, db);
+    assertFeaturedMediaAllowed(featuredMediaId, Boolean(media));
   }
 
   // ============================================
@@ -153,32 +157,7 @@ export class PostService {
   // ============================================
 
   validatePublishing(data) {
-    if (
-      PUBLISHABLE_STATUSES.includes(data.status) &&
-      !hasContent(data.content)
-    ) {
-      throw new AppError(
-        "Validation failed",
-        HTTP_STATUS.BAD_REQUEST,
-        ERROR_CODES.VALIDATION_ERROR,
-        { content: "Content is required for published or scheduled posts" },
-      );
-    }
-
-    if (data.status === "scheduled" && !data.publishedAt) {
-      throw this.badRequest("Scheduled posts require publishedAt");
-    }
-
-    if (
-      data.status === "scheduled" &&
-      new Date(data.publishedAt).getTime() <= Date.now()
-    ) {
-      throw this.badRequest("Scheduled publish date must be in the future");
-    }
-
-    // Published status is stored by this service.
-    // Automatic scheduled publishing requires
-    // a separate scheduler/worker.
+    applyPublishingPolicy(data, { hasContent });
   }
 
   // ============================================
@@ -224,6 +203,7 @@ export class PostService {
       return await this.postRepository.withTransaction(async (db) => {
         await this.validateAuthor(authorId, db);
         await this.validateCategory(data.categoryId, db);
+        await this.validateFeaturedMedia(data.featuredMediaId, db);
 
         const slug = await this.getUniqueSlug(data.title, db);
 
@@ -357,6 +337,7 @@ async getPosts({
         }
 
         await this.validateCategory(data.categoryId, db);
+        await this.validateFeaturedMedia(data.featuredMediaId, db);
 
         let slug = existing.slug;
 

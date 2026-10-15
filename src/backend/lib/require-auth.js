@@ -1,25 +1,18 @@
 import "server-only";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { resolveAuthFromCookies } from "@/backend/lib/auth-context";
 
-import { JwtAdapter } from "@/backend/adapters/jwt.adapter";
-
-const COOKIE_NAME = "token";
-
+/**
+ * SSR gate for admin pages. Uses the same session resolver as API withAuth.
+ * @returns {Promise<{ userId: string, role: string, email: string, name: string }>}
+ */
 export async function requireAuth() {
-  const token = (await cookies()).get(COOKIE_NAME)?.value;
+  const auth = await resolveAuthFromCookies();
 
-  if (!token) redirect("/");
-
-  try {
-    const payload = new JwtAdapter().verify(token);
-    if (typeof payload?.sub === "string" && payload.sub) {
-      return payload.sub;
-    }
-  } catch {
-    // Missing, expired, or invalid tokens should return to the login page.
+  if (!auth) {
+    redirect("/");
   }
 
-  redirect("/");
+  return auth;
 }

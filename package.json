@@ -8,7 +8,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "migrate": "node --env-file=.env.local src/backend/db/migrate.js"
+    "migrate": "node --env-file=.env.local src/backend/db/migrate.js",
+    "bootstrap": "node --env-file=.env.local scripts/bootstrap-admin.mjs",
+    "setup:db": "npm run migrate && npm run bootstrap",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.24",
@@ -47,6 +51,7 @@
     "@tailwindcss/turbopack": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "vitest": "^3.2.4"
   }
 }

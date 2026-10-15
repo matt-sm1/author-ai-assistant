@@ -137,8 +137,8 @@ export class MediaRepository {
   // GET MEDIA BY ID
   // ============================================
 
-  async findById(id) {
-    const result = await this.db.query(
+  async findById(id, db = this.db) {
+    const result = await db.query(
       `
       SELECT ${MEDIA_COLUMNS}
       FROM media

@@ -1,10 +1,41 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Architecture
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the target trust model (server sessions + roles), API surfaces, and domain policies.
+
+## Auth bootstrap
+
+Public self-registration is disabled. Create the first admin via env:
+
+```bash
+# .env.local (required)
+DATABASE_URL=postgresql://...
+BOOTSTRAP_ADMIN_EMAIL=admin@example.com
+BOOTSTRAP_ADMIN_PASSWORD=your-secure-password
+BOOTSTRAP_ADMIN_NAME=Admin
+# plus Cloudinary / JWT_SECRET / CRON_SECRET as needed
+```
+
+```bash
+npm install
+npm run setup:db    # migrate (incl. password_hash + sessions) then bootstrap admin
+npm run dev
+```
+
+`npm run bootstrap` alone creates the admin if none exist (same as first login bootstrap). Further users: `POST /api/auth/users` (admin session).
+
+Cookie name is `session` (opaque DB session id). Password column is `password_hash`. Set `HEALTH_SECRET` to require a bearer token for detailed `/api/health`.
+
+```bash
+npm test            # authz + policy unit tests
+```
+
 ## Getting Started
 
 For the category backend flow, authenticated API routes, validation rules, database behavior, and smoke tests, see [CATEGORY-MODULE.md](./CATEGORY-MODULE.md).
 
-For backend-only registration, login, JWT cookie sessions, protected routes, logout, and auth smoke tests, see [AUTHENTICATION.md](./AUTHENTICATION.md).
+For auth history notes, see [AUTHENTICATION.md](./AUTHENTICATION.md) (superseded in part by ARCHITECTURE.md).
 
 First, run the development server:
 

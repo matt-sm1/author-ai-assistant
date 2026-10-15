@@ -13,7 +13,7 @@ import {
 } from "@/frontend/components/shared/ui-bits";
 
 import PostsTable from "@/frontend/feature/post/components/PostsTable";
-import usePostMutations from "@/frontend/feature/post/hooks/usePostmutations";
+import usePostMutations from "@/frontend/feature/post/hooks/usePostMutations";
 import { useGetPostsQuery } from "@/frontend/feature/post/api/posts.api";
 
 function getErrorMessage(error, fallback) {

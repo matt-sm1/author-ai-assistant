@@ -127,8 +127,8 @@ async create({ name, slug }, db = this.db) {
   // FIND TAG BY SLUG
   // ============================================
 
-  async findBySlug(slug) {
-    const result = await this.db.query(
+  async findBySlug(slug, db = this.db) {
+    const result = await db.query(
       `
       SELECT id, name, slug
       FROM tags
@@ -139,6 +139,24 @@ async create({ name, slug }, db = this.db) {
     );
 
     return result.rows[0] ?? null;
+  }
+
+  /**
+   * Insert tag or return existing row for the same slug (race-safe).
+   */
+  async upsertBySlug({ name, slug }, db = this.db) {
+    const result = await db.query(
+      `
+      INSERT INTO tags (name, slug)
+      VALUES ($1, $2)
+      ON CONFLICT (slug) DO UPDATE
+        SET name = tags.name
+      RETURNING id, name, slug, created_at, updated_at
+      `,
+      [name, slug],
+    );
+
+    return result.rows[0];
   }
 
   // ============================================

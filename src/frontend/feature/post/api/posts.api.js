@@ -30,6 +30,7 @@ export const postsApi = baseApi.injectEndpoints({
         { type: "Categories", id: "LIST" },
         { type: "Tags", id: "LIST" },
         { type: "Authors", id: "LIST" },
+        "Stats",
       ],
     }),
 
@@ -45,6 +46,7 @@ export const postsApi = baseApi.injectEndpoints({
         { type: "Categories", id: "LIST" },
         { type: "Tags", id: "LIST" },
         { type: "Authors", id: "LIST" },
+        "Stats",
       ],
     }),
 
@@ -56,6 +58,7 @@ export const postsApi = baseApi.injectEndpoints({
         { type: "Categories", id: "LIST" },
         { type: "Tags", id: "LIST" },
         { type: "Authors", id: "LIST" },
+        "Stats",
       ],
     }),
   }),

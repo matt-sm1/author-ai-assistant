@@ -3,6 +3,10 @@ import { AppError } from "@/backend/errors/app-error";
 import { HTTP_STATUS } from "@/backend/constants/http-status";
 import { ERROR_CODES } from "@/backend/constants/error-codes";
 
+/** Valid bcrypt hash (of a random string) so missing-user path still runs compare. */
+const DUMMY_HASH =
+  "$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW";
+
 export class PasswordAuthStrategy {
   constructor(userRepository) {
     this.userRepository = userRepository;
@@ -11,20 +15,10 @@ export class PasswordAuthStrategy {
   async authenticate({ email, password }) {
     const user = await this.userRepository.findByEmail(email);
 
-    if (!user) {
-      throw new AppError(
-        "Invalid email or password",
-        HTTP_STATUS.UNAUTHORIZED,
-        ERROR_CODES.INVALID_CREDENTIALS
-      );
-    }
+    const hash = user?.password_hash ?? DUMMY_HASH;
+    const validPassword = await bcrypt.compare(password, hash);
 
-    const validPassword = await bcrypt.compare(
-      password,
-      user.password_hash
-    );
-
-    if (!validPassword) {
+    if (!user || !validPassword || user.status === "disabled") {
       throw new AppError(
         "Invalid email or password",
         HTTP_STATUS.UNAUTHORIZED,
@@ -36,6 +30,8 @@ export class PasswordAuthStrategy {
       id: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
+      status: user.status,
     };
   }
 }

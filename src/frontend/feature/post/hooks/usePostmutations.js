@@ -3,10 +3,7 @@ import {
   useDeletePostMutation,
   useUpdatePostMutation,
 } from "../api/posts.api";
-
-function getErrorMessage(error) {
-  return error?.data?.message ?? error?.message ?? "Post operation failed.";
-}
+import { getApiErrorMessage } from "@/frontend/store/api/baseApi";
 
 export default function usePostMutations() {
   const [createRequest, createState] = useCreatePostMutation();
@@ -21,7 +18,8 @@ export default function usePostMutations() {
     isCreating: createState.isLoading,
     isUpdating: updateState.isLoading,
     isDeleting: deleteState.isLoading,
-    isMutating: createState.isLoading || updateState.isLoading || deleteState.isLoading,
-    error: error ? getErrorMessage(error) : null,
+    isMutating:
+      createState.isLoading || updateState.isLoading || deleteState.isLoading,
+    error: error ? getApiErrorMessage(error, "Post operation failed.") : null,
   };
 }

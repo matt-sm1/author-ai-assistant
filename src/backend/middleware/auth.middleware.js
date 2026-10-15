@@ -1,34 +1,53 @@
-import { JwtAdapter } from "@/backend/adapters/jwt.adapter";
 import { AppError } from "@/backend/errors/app-error";
 import { handleError } from "@/backend/errors/error-handler";
 import { HTTP_STATUS } from "@/backend/constants/http-status";
 import { ERROR_CODES } from "@/backend/constants/error-codes";
-import { getTokenFromRequest } from "@/backend/lib/auth-cookie";
-const tokenProvider = new JwtAdapter();
+import { resolveAuthFromRequest } from "@/backend/lib/auth-context";
 
-function getUserId(request) {
-  const token = getTokenFromRequest(request);
-  if (!token) return null;
-
-  try {
-    const payload = tokenProvider.verify(token);
-    const userId = typeof payload === "object" && payload ? payload.sub : null;
-    return typeof userId === "string" && userId ? userId : null;
-  } catch {
-    return null;
-  }
-}
-
+/**
+ * Wraps a controller as (request, auth, context) where auth is AuthContext.
+ */
 export function withAuth(controller) {
   return async function authenticatedRequest(request, context) {
-    const userId = getUserId(request);
+    try {
+      const auth = await resolveAuthFromRequest(request);
 
-    if (!userId) {
-      return handleError(
-        new AppError("Unauthorized", HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.UNAUTHORIZED)
-      );
+      if (!auth) {
+        return handleError(
+          new AppError(
+            "Unauthorized",
+            HTTP_STATUS.UNAUTHORIZED,
+            ERROR_CODES.UNAUTHORIZED
+          )
+        );
+      }
+
+      return controller(request, auth, context);
+    } catch (error) {
+      return handleError(error);
     }
+  };
+}
 
-    return controller(request, userId, context);
+/**
+ * Requires an authenticated user with one of the given roles.
+ */
+export function withRole(...roles) {
+  const allowed = new Set(roles);
+
+  return function withRoleWrapper(controller) {
+    return withAuth(async function roleGuarded(request, auth, context) {
+      if (!allowed.has(auth.role)) {
+        return handleError(
+          new AppError(
+            "Forbidden",
+            HTTP_STATUS.FORBIDDEN,
+            ERROR_CODES.FORBIDDEN
+          )
+        );
+      }
+
+      return controller(request, auth, context);
+    });
   };
 }

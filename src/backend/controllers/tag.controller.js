@@ -12,6 +12,7 @@ import {
   validateUpdateTagInput,
   validateTagId,
 } from "@/backend/validators/tag.validator";
+import { parsePaginationParams } from "@/backend/lib/pagination";
 
 // ============================================
 // REQUEST HELPERS
@@ -78,26 +79,11 @@ export async function getTagsController(request) {
   try {
     const url = new URL(request.url);
 
-    const pageParam = url.searchParams.get("page") ?? "1";
-    const limitParam = url.searchParams.get("limit") ?? "10";
     const search = (url.searchParams.get("search") ?? "").trim();
-
-    const page = Number(pageParam);
-    const limit = Number(limitParam);
-
-    if (
-      !Number.isSafeInteger(page) ||
-      page < 1 ||
-      !Number.isSafeInteger(limit) ||
-      limit < 1 ||
-      limit > 100
-    ) {
-      throw new AppError(
-        "Invalid pagination parameters",
-        HTTP_STATUS.BAD_REQUEST,
-        ERROR_CODES.VALIDATION_ERROR
-      );
-    }
+    const { page, limit } = parsePaginationParams(url.searchParams, {
+      page: 1,
+      limit: 10,
+    });
 
     const tagService = createTagService();
 
@@ -197,15 +183,17 @@ export async function updateTagController(
 
 export async function deleteTagController(
   request,
-  userId,
+  _auth,
   context
 ) {
   try {
     const id = await getValidatedTagId(context);
+    const { searchParams } = new URL(request.url);
+    const force = searchParams.get("force") === "true";
 
     const tagService = createTagService();
 
-    await tagService.deleteTag(id);
+    await tagService.deleteTag(id, { force });
 
     return Response.json(
       {

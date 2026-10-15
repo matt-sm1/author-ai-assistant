@@ -3,6 +3,7 @@ import { AppError } from "@/backend/errors/app-error";
 import { HTTP_STATUS } from "@/backend/constants/http-status";
 import { ERROR_CODES } from "@/backend/constants/error-codes";
 import { generateSlug } from "@/backend/utils/slug.util";
+import { assertCanDeleteReferenced } from "@/backend/policies/content.policies";
 // ============================================
 // CATEGORY SERVICE
 // ============================================
@@ -204,8 +205,10 @@ async getCategories({ page = 1, limit = 10, search = "" } = {}) {
 
   async deleteCategory(id) {
     try {
-      const deleted =
-        await this.categoryRepository.delete(id);
+      const postCount = await this.categoryRepository.countPosts(id);
+      assertCanDeleteReferenced("a category", postCount);
+
+      const deleted = await this.categoryRepository.delete(id);
 
       if (!deleted) {
         throw this.notFound();

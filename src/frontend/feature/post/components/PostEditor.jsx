@@ -21,6 +21,11 @@ import { postSchema } from "@/frontend/feature/post/schema/post.schema";
 import usePostMutations from "@/frontend/feature/post/hooks/usePostMutations";
 
 function getErrorMessage(error, fallback) {
+  const details = error?.data?.details;
+  if (details && typeof details === "object") {
+    const first = Object.values(details).find(Boolean);
+    if (typeof first === "string") return first;
+  }
   return error?.data?.message ?? error?.message ?? fallback;
 }
 
@@ -230,10 +235,18 @@ function PostEditorForm({
         </div>
 
         <div className="hidden gap-2 sm:flex">
-          <Button type="button" variant="ghost" className="rounded-xl" disabled>
-            <Eye aria-hidden="true" className="h-4 w-4" />
-            Preview
-          </Button>
+          {formData.slug ? (
+            <Button type="button" variant="ghost" className="rounded-xl" asChild>
+              <Link
+                href={`/admin/post/single-post/${formData.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Eye aria-hidden="true" className="h-4 w-4" />
+                Preview
+              </Link>
+            </Button>
+          ) : null}
 
           <Button
             type="button"
@@ -318,6 +331,7 @@ function PostEditorForm({
           onFeaturedImageRemove={() => {
             setFormData((previous) => ({
               ...previous,
+              featuredMediaId: null,
               featuredImage: "",
               featuredImageType: "image",
               featuredImageThumbnail: "",

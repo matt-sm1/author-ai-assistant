@@ -3,11 +3,12 @@ import { baseApi } from "@/frontend/store/api/baseApi";
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     register: builder.mutation({
-      query: ({ name, email, password }) => ({
-        url: "/auth/register",
+      query: ({ name, email, password, role = "editor" }) => ({
+        url: "/auth/users",
         method: "POST",
-        body: { name, email, password },
+        body: { name, email, password, role },
       }),
+      invalidatesTags: ["Auth"],
     }),
 
     login: builder.mutation({

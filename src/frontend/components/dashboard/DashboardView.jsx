@@ -24,8 +24,10 @@ import {
   StatusBadge,
 } from "@/frontend/components/shared/ui-bits";
 import { useGetPostsQuery } from "@/frontend/feature/post/api/posts.api";
-import  usePostMutations  from "@/frontend/feature/post/hooks/usePostmutations";
+import { useGetDashboardStatsQuery } from "@/frontend/feature/stats/api/stats.api";
+import usePostMutations from "@/frontend/feature/post/hooks/usePostMutations";
 import { fmtDate, fmtNum } from "@/frontend/lib/format";
+import { getApiErrorMessage } from "@/frontend/store/api/baseApi";
 
 function greeting() {
   const h = new Date().getHours();
@@ -38,53 +40,53 @@ export default function DashboardView() {
 
   const {
     data,
-    isLoading: loading,
+    isLoading: postsLoading,
     error: postsError,
-  } = useGetPostsQuery({ page: 1, limit: 100 });
+  } = useGetPostsQuery({ page: 1, limit: 5, sortBy: "created_at", sortOrder: "desc" });
+
+  const {
+    data: dashboardStats,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useGetDashboardStatsQuery();
 
   const { deletePost, isDeleting } = usePostMutations();
 
   const posts = data?.posts ?? [];
-  const error =
-    postsError?.data?.message ||
-    postsError?.message ||
-    "";
+  const loading = postsLoading || statsLoading;
+  const error = getApiErrorMessage(postsError || statsError, "");
 
   async function handleDelete() {
-  if (!toDelete) return;
+    if (!toDelete) return;
 
-  try {
-    await deletePost(toDelete);
-    setToDelete(null);
-    toast.success("Post deleted");
-  } catch (err) {
-    
-    toast.error(
-      err?.data?.message || err?.message || "Failed to delete post",
-    );
-    // Dialog khula rehta hai, user dobara try kar sakta hai
+    try {
+      await deletePost(toDelete);
+      setToDelete(null);
+      toast.success("Post deleted");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to delete post"));
+    }
   }
-}
 
   const stats = [
     {
       label: "Total Posts",
-      value: posts.length,
+      value: dashboardStats?.totalPosts ?? 0,
       icon: FileText,
     },
     {
       label: "Published",
-      value: posts.filter((p) => p.status === "published").length,
+      value: dashboardStats?.publishedPosts ?? 0,
       icon: FileCheck,
     },
     {
       label: "Drafts",
-      value: posts.filter((p) => p.status === "draft").length,
+      value: dashboardStats?.draftPosts ?? 0,
       icon: FilePen,
     },
     {
       label: "Scheduled",
-      value: posts.filter((p) => p.status === "scheduled").length,
+      value: dashboardStats?.scheduledPosts ?? 0,
       icon: Eye,
     },
   ];

@@ -13,11 +13,14 @@ export class JwtAdapter {
 
   sign(payload) {
     return jwt.sign(payload, this.getSecret(), {
+      algorithm: "HS256",
       expiresIn: "7d",
     });
   }
 
   verify(token) {
-    return jwt.verify(token, this.getSecret());
+    return jwt.verify(token, this.getSecret(), {
+      algorithms: ["HS256"],
+    });
   }
 }

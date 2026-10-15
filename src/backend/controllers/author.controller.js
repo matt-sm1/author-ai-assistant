@@ -12,6 +12,7 @@ import {
   validateUpdateAuthorInput,
   validateAuthorId,
 } from "@/backend/validators/author.validator";
+import { parsePaginationParams } from "@/backend/lib/pagination";
 
 // ============================================
 // REQUEST HELPERS
@@ -74,8 +75,6 @@ export async function getAuthorsController(request) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const pageParam = searchParams.get("page") ?? "1";
-    const limitParam = searchParams.get("limit") ?? "10";
     const search = (searchParams.get("search") ?? "").trim();
     const sortBy = searchParams.get("sortBy") ?? "created_at";
     const sortOrder = searchParams.get("sortOrder") ?? "desc";
@@ -89,22 +88,10 @@ export async function getAuthorsController(request) {
       );
     }
 
-    const page = Number(pageParam);
-    const limit = Number(limitParam);
-
-    if (
-      !Number.isSafeInteger(page) ||
-      page < 1 ||
-      !Number.isSafeInteger(limit) ||
-      limit < 1 ||
-      limit > 100
-    ) {
-      throw new AppError(
-        "Invalid pagination parameters",
-        HTTP_STATUS.BAD_REQUEST,
-        ERROR_CODES.VALIDATION_ERROR
-      );
-    }
+    const { page, limit } = parsePaginationParams(searchParams, {
+      page: 1,
+      limit: 10,
+    });
 
     const allowedSortColumns = [
       "name",

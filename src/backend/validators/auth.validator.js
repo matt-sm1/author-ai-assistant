@@ -3,37 +3,42 @@ import { AppError } from "@/backend/errors/app-error";
 import { HTTP_STATUS } from "@/backend/constants/http-status";
 import { ERROR_CODES } from "@/backend/constants/error-codes";
 
-const loginSchema = yup.object({
-  email: yup
-    .string()
-    .trim()
-    .lowercase()
-    .email("Enter a valid email address")
-    .required("Email is required"),
+const loginSchema = yup
+  .object({
+    email: yup
+      .string()
+      .trim()
+      .lowercase()
+      .email("Enter a valid email address")
+      .required("Email is required"),
+    password: yup.string().required("Password is required"),
+  })
+  .required();
 
-  password: yup
-    .string()
-    .required("Password is required"),
-}).required();
-
-const registerSchema = yup.object({
-  name: yup
-    .string()
-    .trim()
-    .max(100, "Name cannot exceed 100 characters")
-    .required("Name is required"),
-  email: yup
-    .string()
-    .trim()
-    .lowercase()
-    .email("Enter a valid email address")
-    .required("Email is required"),
-  password: yup
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(72, "Password cannot exceed 72 characters")
-    .required("Password is required")
-}).required();
+const createUserSchema = yup
+  .object({
+    name: yup
+      .string()
+      .trim()
+      .max(100, "Name cannot exceed 100 characters")
+      .required("Name is required"),
+    email: yup
+      .string()
+      .trim()
+      .lowercase()
+      .email("Enter a valid email address")
+      .required("Email is required"),
+    password: yup
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .max(72, "Password cannot exceed 72 characters")
+      .required("Password is required"),
+    role: yup
+      .string()
+      .oneOf(["admin", "editor"], "Role must be admin or editor")
+      .default("editor"),
+  })
+  .required();
 
 async function validateInput(schema, data) {
   try {
@@ -67,6 +72,11 @@ export function validateLoginInput(data) {
   return validateInput(loginSchema, data);
 }
 
+/** @deprecated Public register removed — use validateCreateUserInput */
 export function validateRegisterInput(data) {
-  return validateInput(registerSchema, data);
+  return validateInput(createUserSchema, data);
+}
+
+export function validateCreateUserInput(data) {
+  return validateInput(createUserSchema, data);
 }

@@ -2,6 +2,7 @@ import { AppError } from "@/backend/errors/app-error";
 import { HTTP_STATUS } from "@/backend/constants/http-status";
 import { ERROR_CODES } from "@/backend/constants/error-codes";
 import { generateSlug } from "@/backend/utils/slug.util";
+import { assertCanDeleteTag } from "@/backend/policies/content.policies";
 
 // ============================================
 // TAG SERVICE
@@ -181,8 +182,12 @@ export class TagService {
   // DELETE TAG
   // ============================================
 
-  async deleteTag(id) {
+  async deleteTag(id, { force = false } = {}) {
     try {
+      await this.getTagById(id);
+      const postCount = await this.tagRepository.countPosts(id);
+      assertCanDeleteTag(postCount, { force });
+
       const deleted = await this.tagRepository.delete(id);
 
       if (!deleted) {

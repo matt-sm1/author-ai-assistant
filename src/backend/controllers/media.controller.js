@@ -5,6 +5,7 @@ import { HTTP_STATUS } from "@/backend/constants/http-status";
 import { ERROR_CODES } from "@/backend/constants/error-codes";
 
 import { createMediaService } from "@/backend/factories/media.factory";
+import { parsePaginationParams } from "@/backend/lib/pagination";
 
 import { Readable } from "node:stream";
 
@@ -146,20 +147,12 @@ export async function getMediaController(request) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const page = Number(searchParams.get("page") ?? "1");
-    const limit = Number(searchParams.get("limit") ?? "10");
     const search = (searchParams.get("search") ?? "").trim();
     const resourceType = searchParams.get("resourceType") ?? "";
-
-    if (
-      !Number.isSafeInteger(page) ||
-      page < 1 ||
-      !Number.isSafeInteger(limit) ||
-      limit < 1 ||
-      limit > 100
-    ) {
-      throw badRequest("Invalid pagination parameters");
-    }
+    const { page, limit } = parsePaginationParams(searchParams, {
+      page: 1,
+      limit: 10,
+    });
 
     if (!["", "image", "video"].includes(resourceType)) {
       throw badRequest("Invalid media type");
