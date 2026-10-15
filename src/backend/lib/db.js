@@ -1,21 +1,35 @@
 import { Pool } from "pg";
 
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not defined");
-}
-
 const globalForDb = globalThis;
 
-const pool =
-  globalForDb.__postgresPool ??
-  new Pool({
-    connectionString,
-  });
+/**
+ * Lazy pool so Next.js can collect route data at build time without DATABASE_URL.
+ * Throws only when the database is actually used at runtime.
+ */
+function getPool() {
+  const connectionString = process.env.DATABASE_URL;
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.__postgresPool = pool;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is not defined");
+  }
+
+  if (!globalForDb.__postgresPool) {
+    globalForDb.__postgresPool = new Pool({ connectionString });
+  }
+
+  return globalForDb.__postgresPool;
 }
+
+const pool = new Proxy(
+  {},
+  {
+    get(_target, prop, receiver) {
+      if (prop === "then") return undefined;
+      const real = getPool();
+      const value = Reflect.get(real, prop, real);
+      return typeof value === "function" ? value.bind(real) : value;
+    },
+  }
+);
 
 export default pool;
