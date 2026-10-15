@@ -56,9 +56,8 @@ CREATE TABLE IF NOT EXISTS posts (
     content TEXT,
     excerpt TEXT,
     
-    featured_media_id UUID
-        REFERENCES media(id)
-        ON DELETE SET NULL,
+    -- FK added in 005_create_media.sql (media must exist first)
+    featured_media_id UUID,
 
     featured_image TEXT,
 

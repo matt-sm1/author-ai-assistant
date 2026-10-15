@@ -36,11 +36,8 @@ CREATE TABLE IF NOT EXISTS media (
 );
 
 -- ============================================
--- AUTHOR AND POST MEDIA REFERENCES
+-- POST MEDIA REFERENCE (authors FK is in 006)
 -- ============================================
-
-ALTER TABLE authors
-ADD COLUMN IF NOT EXISTS avatar_media_id UUID;
 
 ALTER TABLE posts
 ADD COLUMN IF NOT EXISTS featured_media_id UUID;
@@ -51,19 +48,6 @@ ADD COLUMN IF NOT EXISTS featured_media_id UUID;
 
 DO $$
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_constraint
-        WHERE conname = 'authors_avatar_media_id_fkey'
-          AND conrelid = 'authors'::regclass
-    ) THEN
-        ALTER TABLE authors
-        ADD CONSTRAINT authors_avatar_media_id_fkey
-        FOREIGN KEY (avatar_media_id)
-        REFERENCES media(id)
-        ON DELETE SET NULL;
-    END IF;
-
     IF NOT EXISTS (
         SELECT 1
         FROM pg_constraint
@@ -87,9 +71,6 @@ ON media (created_at DESC, id DESC);
 
 CREATE INDEX IF NOT EXISTS idx_media_resource_type
 ON media (resource_type);
-
-CREATE INDEX IF NOT EXISTS idx_authors_avatar_media_id
-ON authors (avatar_media_id);
 
 CREATE INDEX IF NOT EXISTS idx_posts_featured_media_id
 ON posts (featured_media_id);
