@@ -18,6 +18,8 @@ export function handleError(error) {
   }
 
 
+  console.error("[api]", error?.message || error, error?.stack);
+
   return Response.json(
     {
       success: false,

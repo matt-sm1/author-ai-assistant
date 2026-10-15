@@ -14,7 +14,16 @@ function getPool() {
   }
 
   if (!globalForDb.__postgresPool) {
-    globalForDb.__postgresPool = new Pool({ connectionString });
+    // Neon uses sslmode=require; pg v8 warns unless uselibpqcompat=true is set.
+    let url = connectionString;
+    if (!url.includes("uselibpqcompat=")) {
+      url += `${url.includes("?") ? "&" : "?"}uselibpqcompat=true`;
+    }
+    if (!/[?&]sslmode=/.test(url)) {
+      url += "&sslmode=require";
+    }
+
+    globalForDb.__postgresPool = new Pool({ connectionString: url });
   }
 
   return globalForDb.__postgresPool;
