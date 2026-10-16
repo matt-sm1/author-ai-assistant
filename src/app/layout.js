@@ -11,6 +11,9 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://authoraiassistant.com/blogs"
+  ),
   title: {
     default: "AuthorBot Articles",
     template: "%s",
@@ -18,13 +21,11 @@ export const metadata = {
   description:
     "Insights for modern authors — AI, reader engagement, and book marketing.",
   robots: {
-    index: false,
-    follow: false,
-    nocache: true,
+    index: true,
+    follow: true,
     googleBot: {
-      index: false,
-      follow: false,
-      noimageindex: true,
+      index: true,
+      follow: true,
     },
   },
   icons: {
