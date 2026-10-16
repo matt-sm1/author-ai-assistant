@@ -1,10 +1,21 @@
+import { Inter } from "next/font/google";
 import SiteHeader from "@/frontend/feature/blog/components/SiteHeader";
 import SiteFooter from "@/frontend/feature/blog/components/SiteFooter";
+import "@/frontend/feature/blog/styles/site-chrome.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-site-inter",
+});
 
 export default function SiteLayout({ children }) {
   return (
-    <div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_45%,#f8fafc_100%)] text-slate-900">
-      <SiteHeader />
+    <div
+      className={`site-chrome flex min-h-screen flex-col ${inter.variable}`}
+      style={{ fontFamily: "var(--font-site-inter), var(--font-site)" }}
+    >
+      <SiteHeader active="articles" />
       <main className="flex-1">{children}</main>
       <SiteFooter />
     </div>

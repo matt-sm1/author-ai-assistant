@@ -2,15 +2,15 @@ import BlogPostCard from "@/frontend/feature/blog/components/BlogPostCard";
 
 export default function BlogListing({ posts = [] }) {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+    <div className="mx-auto w-full max-w-[1200px] px-4 py-12 sm:px-6 sm:py-16">
       <header className="mx-auto mb-12 max-w-2xl text-center">
-        <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-sky-700">
+        <p className="mb-3 text-sm font-semibold tracking-wide text-[var(--theme-accent)]">
           Articles
         </p>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        <h1 className="text-3xl font-bold tracking-tight text-[var(--theme-heading)] sm:text-4xl">
           Latest Insights for Modern Authors
         </h1>
-        <p className="mt-4 text-base leading-relaxed text-slate-600">
+        <p className="mt-4 text-base leading-relaxed text-[var(--theme-copy)]">
           Explore practical ideas on AI, reader engagement, book marketing, and
           smarter ways to turn more visitors into loyal readers.
         </p>

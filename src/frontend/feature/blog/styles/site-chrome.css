@@ -1,0 +1,75 @@
+/* Tokens mirrored from ai-author-assistant-website marketing theme */
+.site-chrome {
+  --theme-heading: #09041d;
+  --theme-copy: #333743;
+  --theme-accent: #a72ff2;
+  --theme-background: #f7f6f7;
+  --theme-background-soft: #f7f5f8;
+  --theme-surface: #fff;
+  --theme-surface-muted: #f8f8f8;
+  --theme-border: #e1e1e1;
+  --theme-border-subtle: #eae8ec;
+  --line: var(--theme-border);
+  --font-site: Inter, "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+  color: var(--theme-copy);
+  font-family: var(--font-site);
+  background: var(--theme-background);
+}
+
+.site-chrome a {
+  text-decoration: none;
+}
+
+.site-chrome__nav-link {
+  position: relative;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.25rem;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-heading);
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .site-chrome__nav-link {
+    font-size: 16px;
+  }
+}
+
+.site-chrome__nav-link:hover,
+.site-chrome__nav-link[data-active="true"] {
+  color: var(--theme-accent);
+}
+
+.site-chrome__cta {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 7rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, var(--theme-copy) 0%, var(--theme-heading) 100%);
+  padding: 0 0.75rem;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: #fff;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .site-chrome__cta {
+    height: 2.5rem;
+    width: 8rem;
+    font-size: 13px;
+  }
+}
+
+.site-chrome__cta:hover {
+  opacity: 0.95;
+  transform: scale(1.02);
+}
+
+.site-chrome__cta:active {
+  transform: scale(0.98);
+}
