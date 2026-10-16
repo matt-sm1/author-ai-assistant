@@ -17,7 +17,7 @@ async function baseQueryWithAuth(args, api, extraOptions) {
     if (!isAuthEndpoint && typeof window !== "undefined") {
       const path = window.location.pathname;
       if (path.startsWith("/admin")) {
-        window.location.assign("/");
+        window.location.assign("/admin/login");
       }
     }
   }

@@ -13,6 +13,7 @@
     "setup:db": "npm run migrate && npm run bootstrap",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:bdd": "vitest run src/backend/bdd",
     "copy:tinymce": "node scripts/copy-tinymce.mjs"
   },
   "dependencies": {
@@ -49,6 +50,7 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
+    "@vitest/coverage-v8": "^3.2.7",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "tailwindcss": "^4",

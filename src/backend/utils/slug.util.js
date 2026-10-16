@@ -1,1 +1,1 @@
-export { generateSlug } from "@/shared/slug";
+export { generateSlug, isReservedSlug, RESERVED_SLUGS } from "@/shared/slug";

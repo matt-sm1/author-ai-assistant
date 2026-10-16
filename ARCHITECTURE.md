@@ -42,6 +42,17 @@ Disabled users (`status = disabled`) fail authentication on every request.
 - Cookie `session` (HttpOnly, SameSite=Lax, Secure in production) stores opaque session id
 - Login creates session; logout revokes it; deleted/disabled users cannot resolve a session
 
+## UI routes
+
+| URL | Audience |
+|-----|----------|
+| `/` | Public published blog listing (marketing header/footer) |
+| `/[slug]` | Public published article |
+| `/admin/login` | Staff login |
+| `/admin/*` | CMS (session required; `robots` noindex) |
+
+Canonical public URLs use `NEXT_PUBLIC_SITE_URL` (e.g. `https://…/blogs` when the marketing site rewrites `/blogs` onto this app). Marketing nav links use `NEXT_PUBLIC_MARKETING_SITE_URL`. This app does **not** set Next.js `basePath`.
+
 ## API surface
 
 | Surface | Auth |
@@ -49,11 +60,12 @@ Disabled users (`status = disabled`) fail authentication on every request.
 | `POST /api/auth/login`, `POST /api/auth/logout` | Public |
 | `GET /api/auth/me` | Session |
 | `POST /api/auth/users` | Admin session (replaces public register) |
+| `GET /api/public/posts`, `GET /api/public/posts/[slug]` | Public (published + due `published_at` only) |
 | `/api/{posts,media,categories,tags,authors,stats}/*` | Session + role |
 | `/api/health` | `HEALTH_SECRET` bearer (or minimal ok if unset in dev) |
-| `/api/cron/*` | `CRON_SECRET` |
+| `/api/cron/*` | `CRON_SECRET` (call on this deployment host; not via marketing rewrite) |
 
-Future public blog reads go under `/api/public/*` (not mixed into admin CRUD).
+Reserved post slugs (`admin`, `api`, `login`, …) are skipped during slug generation so they cannot shadow app routes.
 
 ## Domain policies
 

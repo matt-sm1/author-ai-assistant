@@ -41,7 +41,7 @@ export default function AdminProfile({ onNavigate }) {
       toast.success("Logged out successfully.");
 
       onNavigate?.();
-      router.replace("/");
+      router.replace("/admin/login");
       router.refresh();
     } catch (err) {
       toast.error(

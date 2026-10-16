@@ -23,7 +23,7 @@ export function useRegister() {
 
       toast.success("Account created successfully!");
 
-      router.replace("/");
+      router.replace("/admin/login");
       router.refresh();
 
       return true;

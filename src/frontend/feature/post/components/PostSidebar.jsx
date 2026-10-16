@@ -21,6 +21,7 @@ import {
   SelectItem,
 } from "@/frontend/components/ui/Select";
 import SelectableList from "@/frontend/components/ui/SelectableList";
+import { karachiDateTimeLocalMin } from "@/frontend/lib/format";
 
 function SelectField({
   id,
@@ -146,6 +147,9 @@ export default function PostSidebar({
             id="publish-date"
             type="datetime-local"
             value={post.publishDate ?? ""}
+            min={
+              post.status === "scheduled" ? karachiDateTimeLocalMin() : undefined
+            }
             onChange={(event) =>
               onFieldChange?.("publishDate", event.target.value)
             }
@@ -157,7 +161,8 @@ export default function PostSidebar({
             id="publish-date-help"
             className="mt-1 text-xs text-muted-foreground"
           >
-            Scheduled posts require a future date and time.
+            Times are Pakistan Standard Time (UTC+5). Scheduled posts need a
+            future date/time and go live when the publish cron runs.
           </p>
         </div>
       </PostSection>

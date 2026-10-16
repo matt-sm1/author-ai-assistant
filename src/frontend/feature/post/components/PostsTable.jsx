@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 import { Panel } from "@/frontend/components/shared/ui-bits";
@@ -98,6 +98,18 @@ export default function PostsTable({
       className: "text-right",
       render: (post) => (
         <div className="flex items-center justify-end gap-2">
+          {post.status === "published" && post.slug ? (
+            <Link
+              href={`/${post.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="View live"
+              aria-label={`View live ${post.title || "post"}`}
+              className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Link>
+          ) : null}
 
           <Link
             href={`/admin/post/${post.id}/preview`}
@@ -107,7 +119,6 @@ export default function PostsTable({
           >
             <Eye className="h-4 w-4" />
           </Link>
-
 
           <Link
             href={`/admin/post/${post.id}/edit`}

@@ -36,6 +36,11 @@ export async function publishScheduledPostsController(request) {
     return Response.json({
       success: true,
       publishedCount: publishedPosts.length,
+      published: publishedPosts.map((post) => ({
+        id: post.id,
+        slug: post.slug,
+        published_at: post.published_at,
+      })),
     });
   } catch (error) {
     return handleError(error);

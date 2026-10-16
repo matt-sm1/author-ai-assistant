@@ -11,7 +11,7 @@ export async function requireAuth() {
   const auth = await resolveAuthFromCookies();
 
   if (!auth) {
-    redirect("/");
+    redirect("/admin/login");
   }
 
   return auth;

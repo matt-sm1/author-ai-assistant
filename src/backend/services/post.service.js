@@ -1,7 +1,7 @@
 import { AppError } from "@/backend/errors/app-error";
 import { HTTP_STATUS } from "@/backend/constants/http-status";
 import { ERROR_CODES } from "@/backend/constants/error-codes";
-import { generateSlug } from "@/backend/utils/slug.util";
+import { generateSlug, isReservedSlug } from "@/backend/utils/slug.util";
 import {
   applyPublishingPolicy,
   assertFeaturedMediaAllowed,
@@ -66,6 +66,10 @@ export class PostService {
 
     for (let attempt = 1; attempt <= 100; attempt++) {
       const slug = attempt === 1 ? baseSlug : `${baseSlug}-${attempt}`;
+
+      if (isReservedSlug(slug)) {
+        continue;
+      }
 
       const existing = await this.postRepository.findBySlug(slug, db);
 
@@ -303,6 +307,34 @@ async getPosts({
 
   async getPostBySlug(slug) {
     return this.postRepository.findBySlug(slug);
+  }
+
+  async listPublishedPosts({ page = 1, limit = 12, search = "" } = {}) {
+    const offset = (page - 1) * limit;
+    const [posts, total] = await Promise.all([
+      this.postRepository.findPublishedAll({ limit, offset, search }),
+      this.postRepository.countPublished({ search }),
+    ]);
+
+    return {
+      posts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit) || 0,
+      },
+    };
+  }
+
+  async getPublishedPostBySlug(slug) {
+    const post = await this.postRepository.findPublishedBySlug(slug);
+
+    if (!post) {
+      throw this.notFound();
+    }
+
+    return post;
   }
 
   // ============================================

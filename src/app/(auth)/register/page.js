@@ -7,5 +7,5 @@ export const metadata = {
 
 /** Public self-registration removed; accounts are created by admins. */
 export default function RegisterPage() {
-  redirect("/");
+  redirect("/admin/login");
 }

@@ -187,6 +187,20 @@ function PostEditorForm({
 
   const handleSubmitPost = async (requestedStatus = formData.status) => {
     if (isSaving) return;
+
+    if (requestedStatus === "scheduled") {
+      if (!formData.publishDate?.trim()) {
+        toast.error("Choose a future schedule date and time.");
+        return;
+      }
+      const iso = karachiDateTimeToISO(formData.publishDate);
+      if (!iso || new Date(iso).getTime() <= Date.now()) {
+        toast.error("Scheduled publish date must be in the future.");
+        return;
+      }
+      setFormData((previous) => ({ ...previous, status: "scheduled" }));
+    }
+
     try {
       let publishedAt = null;
 

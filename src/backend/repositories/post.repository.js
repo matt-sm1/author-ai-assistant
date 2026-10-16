@@ -512,6 +512,95 @@ async create(data, db = this.db) {
   }
 
   // ============================================
+  // PUBLIC PUBLISHED READS
+  // ============================================
+
+  async findPublishedAll({
+    limit = 20,
+    offset = 0,
+    search = "",
+  } = {}) {
+    const values = [];
+    const conditions = [
+      "p.status = 'published'",
+      "p.published_at IS NOT NULL",
+      "p.published_at <= NOW()",
+    ];
+
+    if (search) {
+      values.push(`%${escapeLike(String(search).trim())}%`);
+      const index = values.length;
+      conditions.push(`(
+        p.title ILIKE $${index} ESCAPE '!'
+        OR COALESCE(p.excerpt, '') ILIKE $${index} ESCAPE '!'
+        OR COALESCE(p.content, '') ILIKE $${index} ESCAPE '!'
+      )`);
+    }
+
+    const where = `WHERE ${conditions.join(" AND ")}`;
+    const limitIndex = values.length + 1;
+    const offsetIndex = values.length + 2;
+
+    const result = await this.db.query(
+      `
+      ${POST_SELECT}
+      ${where}
+      ORDER BY p.published_at DESC NULLS LAST, p.id DESC
+      LIMIT $${limitIndex}
+      OFFSET $${offsetIndex}
+      `,
+      [...values, limit, offset]
+    );
+
+    return result.rows;
+  }
+
+  async countPublished({ search = "" } = {}) {
+    const values = [];
+    const conditions = [
+      "p.status = 'published'",
+      "p.published_at IS NOT NULL",
+      "p.published_at <= NOW()",
+    ];
+
+    if (search) {
+      values.push(`%${escapeLike(String(search).trim())}%`);
+      const index = values.length;
+      conditions.push(`(
+        p.title ILIKE $${index} ESCAPE '!'
+        OR COALESCE(p.excerpt, '') ILIKE $${index} ESCAPE '!'
+        OR COALESCE(p.content, '') ILIKE $${index} ESCAPE '!'
+      )`);
+    }
+
+    const result = await this.db.query(
+      `
+      SELECT COUNT(*)::int AS total
+      FROM posts p
+      WHERE ${conditions.join(" AND ")}
+      `,
+      values
+    );
+
+    return result.rows[0]?.total ?? 0;
+  }
+
+  async findPublishedBySlug(slug, db = this.db) {
+    const result = await db.query(
+      `
+      ${POST_SELECT}
+      WHERE p.slug = $1
+        AND p.status = 'published'
+        AND p.published_at IS NOT NULL
+        AND p.published_at <= NOW()
+      `,
+      [slug]
+    );
+
+    return result.rows[0] ?? null;
+  }
+
+  // ============================================
   // PUBLISH DUE SCHEDULED POSTS
   // Used by cron-job.org through a secured API.
   // ============================================
@@ -520,7 +609,8 @@ async create(data, db = this.db) {
     const result = await db.query(
       `
       UPDATE posts
-      SET status = 'published'
+      SET status = 'published',
+          updated_at = NOW()
       WHERE status = 'scheduled'
         AND published_at IS NOT NULL
         AND published_at <= NOW()

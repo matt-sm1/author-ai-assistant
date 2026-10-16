@@ -10,6 +10,15 @@ const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
 });
 
+export const metadata = {
+  title: {
+    default: "AuthorBot Articles",
+    template: "%s",
+  },
+  description:
+    "Insights for modern authors — AI, reader engagement, and book marketing.",
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

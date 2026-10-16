@@ -17,13 +17,7 @@ export function slugify(text) {
   return generateSlug(text);
 }
 
-export function toLocalDateTime(value) {
-  if (!value) return "";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "";
-
+function karachiDateTimeParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Karachi",
     year: "numeric",
@@ -37,7 +31,30 @@ export function toLocalDateTime(value) {
   const part = (type) =>
     parts.find((item) => item.type === type)?.value ?? "";
 
-  return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
+  return {
+    year: part("year"),
+    month: part("month"),
+    day: part("day"),
+    hour: part("hour"),
+    minute: part("minute"),
+  };
+}
+
+/** `datetime-local` value for an instant in Asia/Karachi. */
+export function toLocalDateTime(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  const { year, month, day, hour, minute } = karachiDateTimeParts(date);
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
+/** Minimum selectable schedule time (now, Pakistan Standard Time). */
+export function karachiDateTimeLocalMin(now = new Date()) {
+  return toLocalDateTime(now);
 }
 
 export function karachiDateTimeToISO(value) {
