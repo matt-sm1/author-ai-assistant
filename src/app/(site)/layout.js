@@ -22,7 +22,7 @@ export default function SiteLayout({ children }) {
     <div
       className={`site-chrome flex min-h-screen flex-col antialiased ${inter.variable} ${hostGrotesk.variable}`}
     >
-      <SiteHeader active="articles" />
+      <SiteHeader />
       <main id="main-content" className="flex-1">
         {children}
       </main>

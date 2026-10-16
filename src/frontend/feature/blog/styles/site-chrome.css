@@ -105,56 +105,67 @@
   }
 }
 
-.site-chrome__nav-link {
+/* Premium CTA (ported from marketing [data-btn]) */
+.site-chrome [data-btn] {
   position: relative;
-  border-radius: 0.375rem;
-  padding: 0.5rem 0.25rem;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--theme-heading);
-  transition: color 0.2s ease, opacity 0.2s ease;
+  overflow: hidden;
 }
 
-@media (min-width: 768px) {
-  .site-chrome__nav-link {
-    font-size: 16px;
+@media (prefers-reduced-motion: no-preference) {
+  .site-chrome [data-enter="navbar"] {
+    animation: site-chrome-reveal-fade-up 600ms cubic-bezier(0.22, 1, 0.36, 1) 40ms
+      both;
+  }
+
+  .site-chrome [data-btn] {
+    transition:
+      translate 300ms cubic-bezier(0.22, 1, 0.36, 1),
+      scale 300ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 300ms ease-out,
+      opacity 200ms ease-out;
+  }
+
+  .site-chrome [data-btn]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.38) 50%,
+      transparent 70%
+    );
+    transform: translateX(-130%);
+    transition: transform 750ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
-.site-chrome__nav-link:hover,
-.site-chrome__nav-link[data-active="true"] {
-  color: var(--theme-accent);
-}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .site-chrome [data-btn]:hover {
+    translate: 0 -3px;
+    scale: 1.03;
+    box-shadow: 0 14px 30px rgba(133, 70, 239, 0.38),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  }
 
-.site-chrome__cta {
-  display: inline-flex;
-  height: 2.25rem;
-  width: 7rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.5rem;
-  background: linear-gradient(180deg, var(--theme-copy) 0%, var(--theme-heading) 100%);
-  padding: 0 0.75rem;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.25rem;
-  color: #fff;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
+  .site-chrome [data-btn]:hover::after {
+    transform: translateX(130%);
+  }
 
-@media (min-width: 768px) {
-  .site-chrome__cta {
-    height: 2.5rem;
-    width: 8rem;
-    font-size: 13px;
+  .site-chrome [data-btn]:active {
+    translate: 0 0;
+    scale: 0.97;
   }
 }
 
-.site-chrome__cta:hover {
-  opacity: 0.95;
-  transform: scale(1.02);
-}
-
-.site-chrome__cta:active {
-  transform: scale(0.98);
+@keyframes site-chrome-reveal-fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
