@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useRouter, useParams } from "next/navigation";
 import {
   karachiDateTimeToISO,
+  slugify,
   toLocalDateTime,
 } from "@/frontend/lib/format";
 import { Button } from "@/frontend/components/ui/Button";
@@ -16,10 +17,13 @@ import { Panel, StatusBadge } from "@/frontend/components/shared/ui-bits";
 import MediaPicker from "@/frontend/components/ui/MediaPicker";
 import PostSidebar from "@/frontend/feature/post/components/PostSidebar";
 import PostContentEditor from "@/frontend/feature/post/components/PostContentEditor";
-import { slugify } from "@/frontend/lib/format";
 import { toNestedHostingerMediaUrl } from "@/frontend/lib/hostinger-media-url";
+import { mapEditorFormToArticle } from "@/frontend/feature/post/lib/map-post-article";
+import { writePreviewDraft } from "@/frontend/feature/post/lib/preview-draft";
 import { postSchema } from "@/frontend/feature/post/schema/post.schema";
 import usePostMutations from "@/frontend/feature/post/hooks/usePostMutations";
+import useCategories from "@/frontend/feature/category/hooks/useCategories";
+import useAuthors from "@/frontend/feature/author/hooks/useAuthors";
 
 function getErrorMessage(error, fallback) {
   const details = error?.data?.details;
@@ -113,8 +117,22 @@ function PostEditorForm({
 
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const { createPost, updatePost, isCreating, isUpdating } = usePostMutations();
+  const { categories } = useCategories({ page: 1, limit: 100 });
+  const { authors } = useAuthors({
+    page: 1,
+    limit: 100,
+    sortBy: "name",
+    sortOrder: "asc",
+    activeOnly: true,
+  });
 
   const isSaving = isCreating || isUpdating;
+
+  const canPreview = Boolean(
+    formData.title?.trim() ||
+      formData.content?.trim() ||
+      formData.featuredImage?.trim(),
+  );
 
   const updateField = (field, value) => {
     setFormData((previous) => ({
@@ -129,6 +147,42 @@ function PostEditorForm({
       title: value,
       slug: slugify(value),
     }));
+  };
+
+  const handlePreview = () => {
+    if (!canPreview) {
+      toast.error("Add a title, content, or featured image to preview.");
+      return;
+    }
+
+    const category = categories.find((item) => item.id === formData.category);
+    const author =
+      authors.find((item) => item.id === formData.authorId) ||
+      existingPost?.author ||
+      null;
+
+    const article = mapEditorFormToArticle(formData, {
+      categoryName: category?.name ?? existingPost?.category_name ?? null,
+      categorySlug: category?.slug ?? existingPost?.category_slug ?? null,
+      author: author
+        ? {
+            name: author.name,
+            avatarUrl: author.avatarUrl ?? author.avatar_url ?? null,
+          }
+        : null,
+      tags: formData.tags ?? [],
+    });
+
+    try {
+      writePreviewDraft(article);
+      window.open("/admin/post/preview", "_blank", "noopener,noreferrer");
+    } catch (error) {
+      if (error?.name === "QuotaExceededError") {
+        toast.error("Preview is too large to open. Shorten the content and try again.");
+        return;
+      }
+      toast.error("Unable to open preview.");
+    }
   };
 
   const handleSubmitPost = async (requestedStatus = formData.status) => {
@@ -236,18 +290,16 @@ function PostEditorForm({
         </div>
 
         <div className="hidden gap-2 sm:flex">
-          {formData.slug ? (
-            <Button type="button" variant="ghost" className="rounded-xl" asChild>
-              <Link
-                href={`/admin/post/single-post/${formData.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Eye aria-hidden="true" className="h-4 w-4" />
-                Preview
-              </Link>
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            className="rounded-xl"
+            onClick={handlePreview}
+            disabled={!canPreview}
+          >
+            <Eye aria-hidden="true" className="h-4 w-4" />
+            Preview
+          </Button>
 
           <Button
             type="button"

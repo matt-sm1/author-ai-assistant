@@ -1,3 +1,5 @@
+import { generateSlug } from "@/shared/slug";
+
 export function fmtNum(n) {
   return new Intl.NumberFormat("en-US", { notation: "compact" }).format(n);
 }
@@ -10,12 +12,9 @@ export function fmtDate(d) {
   });
 }
 
+/** Alias for shared generateSlug (client form fields). */
 export function slugify(text) {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  return generateSlug(text);
 }
 
 export function toLocalDateTime(value) {

@@ -100,7 +100,7 @@ export default function PostsTable({
         <div className="flex items-center justify-end gap-2">
 
           <Link
-            href={`/admin/post/single-post/${encodeURIComponent(post.slug)}`}
+            href={`/admin/post/${post.id}/preview`}
             title="Preview post"
             aria-label={`Preview ${post.title || "post"}`}
             className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
