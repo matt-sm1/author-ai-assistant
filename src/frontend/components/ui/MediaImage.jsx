@@ -3,6 +3,7 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/frontend/lib/utils";
+import { toNestedHostingerMediaUrl } from "@/frontend/lib/hostinger-media-url";
 
 function isHttpUrl(src) {
   if (typeof src !== "string" || !src) return false;
@@ -15,9 +16,8 @@ function isHttpUrl(src) {
 }
 
 /**
- * Hostinger-first media renderer.
- * Uses native <img> for remote URLs so paint is not blocked by next/image
- * remotePatterns / optimizer failures.
+ * Hostinger-first media renderer (native <img>).
+ * On error, retries once with the legacy nested /media/media/... path.
  */
 const MediaImage = forwardRef(function MediaImage(
   {
@@ -36,7 +36,15 @@ const MediaImage = forwardRef(function MediaImage(
 ) {
   const rootRef = useRef(null);
   const [inView, setInView] = useState(!viewportLazy || priority);
+  const [currentSrc, setCurrentSrc] = useState(src);
+  const [triedNested, setTriedNested] = useState(false);
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setCurrentSrc(src);
+    setTriedNested(false);
+    setFailed(false);
+  }, [src]);
 
   useEffect(() => {
     if (!viewportLazy || priority || inView) return undefined;
@@ -61,7 +69,7 @@ const MediaImage = forwardRef(function MediaImage(
     return () => io.disconnect();
   }, [viewportLazy, priority, inView]);
 
-  if (!src || !isHttpUrl(src) || failed) {
+  if (!currentSrc || !isHttpUrl(currentSrc) || failed) {
     return (
       <div
         ref={rootRef}
@@ -89,7 +97,7 @@ const MediaImage = forwardRef(function MediaImage(
     // eslint-disable-next-line @next/next/no-img-element
     <img
       ref={ref}
-      src={src}
+      src={currentSrc}
       alt={alt}
       width={fill ? undefined : width}
       height={fill ? undefined : height}
@@ -99,6 +107,14 @@ const MediaImage = forwardRef(function MediaImage(
       className={cn(fill && "absolute inset-0 h-full w-full", className)}
       onLoad={onLoad}
       onError={(event) => {
+        if (!triedNested) {
+          const nested = toNestedHostingerMediaUrl(currentSrc);
+          if (nested && nested !== currentSrc) {
+            setTriedNested(true);
+            setCurrentSrc(nested);
+            return;
+          }
+        }
         setFailed(true);
         onError?.(event);
       }}

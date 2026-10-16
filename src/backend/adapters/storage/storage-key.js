@@ -58,6 +58,11 @@ export function buildMediaStorageKey(ext, now = new Date()) {
   return assertSafeStorageKey(key);
 }
 
+/**
+ * Public URL for a storage key.
+ * Key `media/YYYY/MM/file.ext` → `{HOSTINGER_PUBLIC_BASE_URL}/media/YYYY/MM/file.ext`
+ * which maps to disk `public_html/media/YYYY/MM/file.ext` (PHP strips the leading media/).
+ */
 export function publicUrlForKey(baseUrl, storageKey) {
   const base = String(baseUrl || "").replace(/\/+$/, "");
   assertSafeStorageKey(storageKey);

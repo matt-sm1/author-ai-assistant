@@ -137,6 +137,21 @@ function media_read_ticket_from_request(): array
     media_json(['success' => false, 'message' => 'Missing upload ticket'], 401);
 }
 
+/**
+ * Storage keys look like media/YYYY/MM/file.ext (public URL path).
+ * media_root is already .../public_html/media, so strip the leading media/
+ * segment when building the filesystem path — otherwise files land at
+ * media/media/YYYY/... while URLs point at /media/YYYY/...
+ */
+function media_relative_under_root(string $storageKey): string
+{
+    $relative = str_replace('\\', '/', $storageKey);
+    if (strpos($relative, 'media/') === 0) {
+        return substr($relative, strlen('media/'));
+    }
+    return $relative;
+}
+
 function media_paths(string $storageKey): array
 {
     $cfg = media_config();
@@ -148,8 +163,20 @@ function media_paths(string $storageKey): array
         $root = realpath($cfg['media_root']);
     }
 
-    $relative = str_replace('\\', '/', $storageKey);
-    $full = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+    $underRoot = media_relative_under_root($storageKey);
+    $full = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $underRoot);
+
+    // Legacy uploads were written with a double "media/" nest; prefer that path if present.
+    $legacyRelative = str_replace('\\', '/', $storageKey);
+    $legacyFull = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $legacyRelative);
+    if (
+        !file_exists($full) &&
+        !file_exists($full . '.part') &&
+        (file_exists($legacyFull) || file_exists($legacyFull . '.part'))
+    ) {
+        $full = $legacyFull;
+    }
+
     $dir = dirname($full);
     $part = $full . '.part';
     $meta = $full . '.meta.json';

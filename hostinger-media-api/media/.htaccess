@@ -16,3 +16,14 @@
 </IfModule>
 
 Options -Indexes
+
+# Legacy: older uploads were stored under media/media/YYYY/... while public
+# URLs are /media/YYYY/.... Serve those nested files until they are moved.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /media/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{DOCUMENT_ROOT}/media/media/$1 -f
+  RewriteRule ^(.+)$ media/$1 [L]
+</IfModule>

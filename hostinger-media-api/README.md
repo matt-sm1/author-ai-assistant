@@ -16,7 +16,21 @@ public_html/
     delete.php
   media/              ← create empty; copy media/.htaccess here
     .htaccess
+    2026/10/...       ← files on disk (NOT media/media/...)
 ```
+
+Storage keys / public URLs look like `media/YYYY/MM/file.webp`.
+`media_root` is already `public_html/media`, so the PHP API strips the leading
+`media/` when writing — final path is `public_html/media/YYYY/MM/file.webp`,
+served at `{public_base_url}/media/YYYY/MM/file.webp`.
+
+### If images 404 but `/media/media/YYYY/...` works
+
+Older API builds wrote a double `media/` folder. Fix on Hostinger:
+
+1. Upload updated `media-api/lib.php` (strips the prefix for new uploads).
+2. Upload updated `media/.htaccess` (serves legacy nested files at the clean URL).
+3. Optional cleanup in File Manager: move `public_html/media/media/YYYY` → `public_html/media/YYYY`.
 
 ## Setup
 
@@ -26,6 +40,7 @@ public_html/
    - `media_root` = absolute path to `public_html/media`
    - `cors_origins` = your Vercel app origin(s), comma-separated
 2. Ensure `media/` is web-accessible at `{public_base_url}/media/...`
+   (file `public_html/media/2026/10/x.webp` → URL `/media/2026/10/x.webp`)
 3. On Vercel set:
    - `STORAGE_PROVIDER=hostinger`
    - `HOSTINGER_PUBLIC_BASE_URL`
