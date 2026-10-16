@@ -17,6 +17,13 @@ export const metadata = {
   },
   description:
     "Insights for modern authors — AI, reader engagement, and book marketing.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({ children }) {
