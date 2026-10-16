@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 
+import MediaPicker from "@/frontend/components/ui/MediaPicker";
+
 function EditorSkeleton() {
   return (
     <div
@@ -35,10 +37,17 @@ const TinyEditor = dynamic(() => import("./PostContentEditorTiny"), {
  */
 export default function PostContentEditor({ value = "", onChange }) {
   const containerRef = useRef(null);
+  const insertCallbackRef = useRef(null);
   const [shouldMount, setShouldMount] = useState(false);
+  const [bodyPickerOpen, setBodyPickerOpen] = useState(false);
 
   const activate = useCallback(() => {
     setShouldMount(true);
+  }, []);
+
+  const handleRequestInsertMedia = useCallback(({ insert }) => {
+    insertCallbackRef.current = insert;
+    setBodyPickerOpen(true);
   }, []);
 
   useEffect(() => {
@@ -76,34 +85,51 @@ export default function PostContentEditor({ value = "", onChange }) {
     };
   }, [shouldMount]);
 
-  if (!shouldMount) {
-    return (
-      <div
-        ref={containerRef}
-        role="button"
-        tabIndex={0}
-        onClick={activate}
-        onFocus={activate}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            activate();
-          }
-        }}
-        className="cursor-text outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label="Load content editor"
-      >
-        <EditorSkeleton />
-        <p className="mt-2 text-xs text-muted-foreground">
-          Click or focus to load the editor…
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div ref={containerRef}>
-      <TinyEditor value={value} onChange={onChange} />
-    </div>
+    <>
+      {!shouldMount ? (
+        <div
+          ref={containerRef}
+          role="button"
+          tabIndex={0}
+          onClick={activate}
+          onFocus={activate}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              activate();
+            }
+          }}
+          className="cursor-text outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="Load content editor"
+        >
+          <EditorSkeleton />
+          <p className="mt-2 text-xs text-muted-foreground">
+            Click or focus to load the editor…
+          </p>
+        </div>
+      ) : (
+        <div ref={containerRef}>
+          <TinyEditor
+            value={value}
+            onChange={onChange}
+            onRequestInsertMedia={handleRequestInsertMedia}
+          />
+        </div>
+      )}
+
+      <MediaPicker
+        open={bodyPickerOpen}
+        onOpenChange={(open) => {
+          setBodyPickerOpen(open);
+          if (!open) insertCallbackRef.current = null;
+        }}
+        onSelect={(item) => {
+          insertCallbackRef.current?.(item);
+          insertCallbackRef.current = null;
+          setBodyPickerOpen(false);
+        }}
+      />
+    </>
   );
 }

@@ -14,6 +14,8 @@ const STYLE_PROPERTIES = [
   "border-top",
   "border-width",
   "color",
+  "display",
+  "float",
   "font-family",
   "font-size",
   "font-style",
@@ -26,6 +28,7 @@ const STYLE_PROPERTIES = [
   "margin-left",
   "margin-right",
   "margin-top",
+  "max-height",
   "max-width",
   "padding",
   "padding-bottom",
@@ -68,6 +71,22 @@ function keepSupportedInlineImage(_tagName, attribs) {
     )
   ) {
     delete attribs.src;
+  }
+
+  // Nested Hostinger path so saved HTML matches working disk layout.
+  if (typeof attribs.src === "string" && /^https?:\/\//i.test(attribs.src)) {
+    try {
+      const url = new URL(attribs.src);
+      if (
+        /^\/media\/\d{4}\/\d{2}\//.test(url.pathname) &&
+        !url.pathname.startsWith("/media/media/")
+      ) {
+        url.pathname = `/media${url.pathname}`;
+        attribs.src = url.toString();
+      }
+    } catch {
+      /* keep original */
+    }
   }
 
   return { tagName: "img", attribs };
@@ -141,7 +160,7 @@ const SANITIZE_OPTIONS = {
       "title",
       "width",
     ],
-    img: ["alt", "height", "src", "title", "width"],
+    img: ["alt", "class", "height", "src", "style", "title", "width", "align"],
     source: ["src", "type"],
     td: ["colspan", "headers", "rowspan", "width", "height"],
     th: ["abbr", "colspan", "headers", "rowspan", "scope", "width", "height"],

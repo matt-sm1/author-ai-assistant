@@ -218,6 +218,8 @@ export default function MediaPicker({
       url: item.url,
       resourceType: item.resource_type,
       thumbnailUrl: item.thumbnail_url ?? "",
+      alt: item.alt_text ?? "",
+      filename: item.filename ?? "",
     });
 
     onOpenChange(false);

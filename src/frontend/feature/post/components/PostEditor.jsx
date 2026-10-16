@@ -17,6 +17,7 @@ import MediaPicker from "@/frontend/components/ui/MediaPicker";
 import PostSidebar from "@/frontend/feature/post/components/PostSidebar";
 import PostContentEditor from "@/frontend/feature/post/components/PostContentEditor";
 import { slugify } from "@/frontend/lib/format";
+import { toNestedHostingerMediaUrl } from "@/frontend/lib/hostinger-media-url";
 import { postSchema } from "@/frontend/feature/post/schema/post.schema";
 import usePostMutations from "@/frontend/feature/post/hooks/usePostMutations";
 
@@ -97,7 +98,7 @@ function PostEditorForm({
     publishDate: existingPost
       ? toLocalDateTime(existingPost.published_at)
       : "",
-    featuredImage: existingPost?.featured_image ?? "",
+    featuredImage: toNestedHostingerMediaUrl(existingPost?.featured_image ?? "") || "",
     featuredMediaId: existingPost?.featured_media_id ?? null,
     featuredImageType: getFeaturedMediaType(existingPost?.featured_image),
     featuredImageThumbnail: "",
@@ -387,12 +388,14 @@ function PostEditorForm({
         open={mediaPickerOpen}
         onOpenChange={setMediaPickerOpen}
         onSelect={({ id, url, resourceType, thumbnailUrl }) => {
+          const nestedUrl = toNestedHostingerMediaUrl(url) || url;
           setFormData((previous) => ({
             ...previous,
             featuredMediaId: id,
-            featuredImage: url,
+            featuredImage: nestedUrl,
             featuredImageType: resourceType,
-            featuredImageThumbnail: thumbnailUrl,
+            featuredImageThumbnail:
+              toNestedHostingerMediaUrl(thumbnailUrl) || thumbnailUrl,
           }));
         }}
       />
