@@ -1,7 +1,9 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: "/api",
+  baseUrl: `${basePath}/api`,
   credentials: "include",
 });
 
@@ -16,8 +18,8 @@ async function baseQueryWithAuth(args, api, extraOptions) {
 
     if (!isAuthEndpoint && typeof window !== "undefined") {
       const path = window.location.pathname;
-      if (path.startsWith("/admin")) {
-        window.location.assign("/admin/login");
+      if (path.includes("/admin")) {
+        window.location.assign(`${basePath}/admin/login`);
       }
     }
   }

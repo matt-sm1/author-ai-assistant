@@ -1,4 +1,4 @@
-const DEFAULT_MARKETING = "https://ai-author-assistant-website.vercel.app";
+const DEFAULT_MARKETING = "https://authoraiassistant.com";
 
 export function getMarketingSiteUrl() {
   const raw = process.env.NEXT_PUBLIC_MARKETING_SITE_URL?.trim();

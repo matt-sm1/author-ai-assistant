@@ -26,9 +26,7 @@ describe("Feature: Public site URL helpers", () => {
   describe("Scenario: Marketing chrome links", () => {
     it("Given no env, When getMarketingSiteUrl, Then default marketing host", () => {
       delete process.env.NEXT_PUBLIC_MARKETING_SITE_URL;
-      expect(getMarketingSiteUrl()).toBe(
-        "https://ai-author-assistant-website.vercel.app"
-      );
+      expect(getMarketingSiteUrl()).toBe("https://authoraiassistant.com");
     });
 
     it("Given trailing slash env, When marketingPath, Then paths join cleanly", () => {
@@ -46,14 +44,11 @@ describe("Feature: Public site URL helpers", () => {
 
   describe("Scenario: Canonical article URLs for /blogs rewrite", () => {
     it("Given NEXT_PUBLIC_SITE_URL with /blogs, When publicPostUrl, Then absolute canonical", () => {
-      process.env.NEXT_PUBLIC_SITE_URL =
-        "https://ai-author-assistant-website.vercel.app/blogs/";
+      process.env.NEXT_PUBLIC_SITE_URL = "https://authoraiassistant.com/blogs/";
       expect(publicPostUrl("my-post")).toBe(
-        "https://ai-author-assistant-website.vercel.app/blogs/my-post"
+        "https://authoraiassistant.com/blogs/my-post"
       );
-      expect(getPublicSiteUrl()).toBe(
-        "https://ai-author-assistant-website.vercel.app/blogs"
-      );
+      expect(getPublicSiteUrl()).toBe("https://authoraiassistant.com/blogs");
     });
 
     it("Given no SITE_URL, When publicPostUrl, Then relative path", () => {

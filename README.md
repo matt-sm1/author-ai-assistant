@@ -19,29 +19,30 @@ Unauthenticated reads: `GET /api/public/posts` and `GET /api/public/posts/[slug]
 
 Env for chrome + SEO:
 
-- `NEXT_PUBLIC_MARKETING_SITE_URL` — links in header/footer (default marketing site)
-- `NEXT_PUBLIC_SITE_URL` — canonical blog base (use `https://<marketing>/blogs` when rewrite is live)
+- `NEXT_PUBLIC_MARKETING_SITE_URL` — `https://authoraiassistant.com`
+- `NEXT_PUBLIC_SITE_URL` — `https://authoraiassistant.com/blogs`
 
 ### Marketing site rewrite (`/blogs` → this app)
 
-On the **marketing** Vercel project (not this repo), rewrite without setting `basePath` here:
+This app uses Next.js `basePath: "/blogs"`. The **marketing** site (`ai-author-assistant-website`) proxies:
 
 ```json
 {
   "rewrites": [
     {
       "source": "/blogs",
-      "destination": "https://author-ai-assistant.vercel.app/"
+      "destination": "https://author-ai-assistant.vercel.app/blogs"
     },
     {
       "source": "/blogs/:path*",
-      "destination": "https://author-ai-assistant.vercel.app/:path*"
+      "destination": "https://author-ai-assistant.vercel.app/blogs/:path*"
     }
   ]
 }
 ```
 
-Cron and media finalize should still target **this** deployment host (`/api/cron/*`, Hostinger `cors_origins` for the origin editors use for `/admin`).
+Public blog: `https://authoraiassistant.com/blogs` · CMS: `https://authoraiassistant.com/blogs/admin/login`  
+Cron targets this deployment: `/blogs/api/cron/*` (with `CRON_SECRET`).
 
 ## Auth bootstrap
 

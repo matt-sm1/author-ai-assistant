@@ -6,6 +6,7 @@ const MAIN_PAGES = [
   { label: "Home", href: marketingPath("/") },
   { label: "Product", href: marketingPath("/#integrations") },
   { label: "Features", href: marketingPath("/#features") },
+  { label: "Blogs", href: "/", internal: true },
   { label: "Pricing", href: marketingPath("/#contact") },
   { label: "Contact", href: marketingPath("/#contact") },
 ];
@@ -13,7 +14,6 @@ const MAIN_PAGES = [
 const EXPLORE = [
   { label: "Always-On", href: marketingPath("/#always-on") },
   { label: "FAQ", href: marketingPath("/#faq") },
-  { label: "Articles", href: "/" },
 ];
 
 export default function SiteFooter() {
@@ -66,12 +66,21 @@ export default function SiteFooter() {
               <ul className="mt-5 space-y-4">
                 {MAIN_PAGES.map((item) => (
                   <li key={item.label}>
-                    <a
-                      href={item.href}
-                      className="text-base leading-[24.8px] text-[var(--theme-copy)] transition hover:text-[var(--theme-heading)]"
-                    >
-                      {item.label}
-                    </a>
+                    {item.internal ? (
+                      <Link
+                        href={item.href}
+                        className="text-base leading-[24.8px] text-[var(--theme-copy)] transition hover:text-[var(--theme-heading)]"
+                      >
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={item.href}
+                        className="text-base leading-[24.8px] text-[var(--theme-copy)] transition hover:text-[var(--theme-heading)]"
+                      >
+                        {item.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

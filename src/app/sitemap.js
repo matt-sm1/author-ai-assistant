@@ -2,7 +2,7 @@ import { createPostService } from "@/backend/factories/post.factory";
 import { getPublicSiteUrl } from "@/frontend/feature/blog/lib/site-urls";
 
 export default async function sitemap() {
-  const base = getPublicSiteUrl() || "https://author-ai-assistant.vercel.app";
+  const base = getPublicSiteUrl() || "https://authoraiassistant.com/blogs";
 
   const entries = [
     {

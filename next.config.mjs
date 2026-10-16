@@ -31,8 +31,15 @@ function hostingerRemotePatterns() {
   return patterns;
 }
 
+/** Served at authoraiassistant.com/blogs via marketing-site rewrite. */
+const BASE_PATH = "/blogs";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  basePath: BASE_PATH,
+  env: {
+    NEXT_PUBLIC_BASE_PATH: BASE_PATH,
+  },
   images: {
     // MediaImage uses native <img> for remotes; keep allowlist for any residual next/image usage.
     remotePatterns: hostingerRemotePatterns(),

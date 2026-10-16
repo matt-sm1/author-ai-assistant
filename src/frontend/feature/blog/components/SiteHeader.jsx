@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { marketingPath } from "@/frontend/feature/blog/lib/site-urls";
 
 const links = [
   { label: "Home", href: marketingPath("/") },
   { label: "Product", href: marketingPath("/#integrations") },
   { label: "Features", href: marketingPath("/#features") },
+  { label: "Blogs", href: "/", internal: true },
   { label: "Pricing", href: marketingPath("/#contact") },
 ];
 
@@ -77,16 +79,28 @@ export default function SiteHeader() {
           className="hidden items-center justify-center gap-8 sm:flex"
           aria-label="Main navigation"
         >
-          {links.map(({ label, href }) => (
-            <a
-              key={href}
-              href={href}
-              onClick={closeMenu}
-              className="relative rounded-md px-1 py-2 font-sans text-[13px] font-medium text-[var(--theme-heading)] no-underline transition-[color,opacity] duration-200 hover:text-[var(--theme-accent)] md:text-[16px]"
-            >
-              {label}
-            </a>
-          ))}
+          {links.map(({ label, href, internal }) =>
+            internal ? (
+              <Link
+                key={label}
+                href={href}
+                onClick={closeMenu}
+                aria-current="page"
+                className="relative rounded-md px-1 py-2 font-sans text-[13px] font-medium text-[var(--theme-accent)] no-underline transition-[color,opacity] duration-200 hover:text-[var(--theme-accent)] md:text-[16px]"
+              >
+                {label}
+              </Link>
+            ) : (
+              <a
+                key={label}
+                href={href}
+                onClick={closeMenu}
+                className="relative rounded-md px-1 py-2 font-sans text-[13px] font-medium text-[var(--theme-heading)] no-underline transition-[color,opacity] duration-200 hover:text-[var(--theme-accent)] md:text-[16px]"
+              >
+                {label}
+              </a>
+            )
+          )}
         </nav>
 
         <div className="flex items-center justify-self-end">
@@ -148,21 +162,38 @@ export default function SiteHeader() {
         }`}
       >
         <ul className="flex flex-col">
-          {links.map(({ label, href }) => (
-            <li key={href}>
-              <a
-                href={href}
-                onClick={closeMenu}
-                className="flex items-center justify-between rounded-lg px-3 py-3.5 text-base font-medium text-[var(--theme-heading)] no-underline transition-colors hover:bg-[var(--theme-accent)]/5 active:bg-[var(--theme-accent)]/5"
-              >
-                {label}
-                <span
-                  aria-hidden="true"
-                  className="text-[var(--theme-heading)]/30"
+          {links.map(({ label, href, internal }) => (
+            <li key={label}>
+              {internal ? (
+                <Link
+                  href={href}
+                  onClick={closeMenu}
+                  aria-current="page"
+                  className="flex items-center justify-between rounded-lg bg-[var(--theme-accent)]/5 px-3 py-3.5 text-base font-medium text-[var(--theme-accent)] no-underline"
                 >
-                  ›
-                </span>
-              </a>
+                  {label}
+                  <span
+                    aria-hidden="true"
+                    className="text-[var(--theme-heading)]/30"
+                  >
+                    ›
+                  </span>
+                </Link>
+              ) : (
+                <a
+                  href={href}
+                  onClick={closeMenu}
+                  className="flex items-center justify-between rounded-lg px-3 py-3.5 text-base font-medium text-[var(--theme-heading)] no-underline transition-colors hover:bg-[var(--theme-accent)]/5 active:bg-[var(--theme-accent)]/5"
+                >
+                  {label}
+                  <span
+                    aria-hidden="true"
+                    className="text-[var(--theme-heading)]/30"
+                  >
+                    ›
+                  </span>
+                </a>
+              )}
             </li>
           ))}
         </ul>
