@@ -1,8 +1,8 @@
 "use client";
 
 import { Calendar, Eye, FileImage, FileVideo, Play } from "lucide-react";
-import Image from "next/image";
 
+import MediaImage from "@/frontend/components/ui/MediaImage";
 import { cn } from "@/frontend/lib/utils";
 import { fmtDate } from "@/frontend/lib/format";
 
@@ -10,7 +10,7 @@ import { fmtDate } from "@/frontend/lib/format";
 // MEDIA CARD
 // ============================================
 
-export default function MediaCard({ item, onClick }) {
+export default function MediaCard({ item, onClick, priority = false }) {
   const isVideo = item.resource_type === "video";
 
   const previewUrl = item.thumbnail_url || item.url;
@@ -30,13 +30,18 @@ export default function MediaCard({ item, onClick }) {
       )}
     >
       {/* MEDIA PREVIEW */}
-      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted">
-        <Image
+      <div
+        className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "240px 180px" }}
+      >
+        <MediaImage
           src={previewUrl}
           alt={item.alt_text || item.filename}
           fill
           sizes="(max-width: 768px) 50vw, 25vw"
           className="object-contain"
+          priority={priority}
+          viewportLazy={!priority}
         />
 
         {/* VIDEO PLAY BUTTON */}

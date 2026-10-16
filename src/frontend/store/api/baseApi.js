@@ -28,6 +28,10 @@ async function baseQueryWithAuth(args, api, extraOptions) {
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithAuth,
+  keepUnusedDataFor: 300,
+  refetchOnFocus: false,
+  refetchOnMountOrArgChange: 60,
+  refetchOnReconnect: true,
   tagTypes: [
     "Categories",
     "Tags",

@@ -1,13 +1,35 @@
+function hostingerRemotePatterns() {
+  const patterns = [
+    {
+      protocol: "https",
+      hostname: "**.hostingersite.com",
+      pathname: "/**",
+    },
+  ];
+
+  const base = process.env.HOSTINGER_PUBLIC_BASE_URL?.trim();
+  if (base) {
+    try {
+      const { hostname, protocol } = new URL(base);
+      if (hostname && protocol.startsWith("http")) {
+        patterns.unshift({
+          protocol: protocol.replace(":", ""),
+          hostname,
+          pathname: "/**",
+        });
+      }
+    } catch {
+      /* ignore invalid env */
+    }
+  }
+
+  return patterns;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        pathname: "/**",
-      },
-    ],
+    remotePatterns: hostingerRemotePatterns(),
   },
   turbopack: {
     rules: {

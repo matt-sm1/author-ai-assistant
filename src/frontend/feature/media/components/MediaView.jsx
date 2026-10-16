@@ -25,7 +25,7 @@ import {
 } from "@/frontend/components/shared/ui-bits";
 
 import MediaUpload from "@/frontend/feature/media/components/MediaUpload";
-import MediaCard from "@/frontend/feature/media/components/MediaCard";
+import MediaVirtualGrid from "@/frontend/feature/media/components/MediaVirtualGrid";
 import MediaDetailsDialog from "@/frontend/feature/media/components/MediaDetailsDialog";
 
 import useMedia from "@/frontend/feature/media/hooks/useMedia";
@@ -321,16 +321,10 @@ export default function MediaView() {
             />
           ) : (
             <>
-              {/* MEDIA CARDS */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {media.map((item) => (
-                  <MediaCard
-                    key={item.id}
-                    item={item}
-                    onClick={() => handleOpenDetails(item)}
-                  />
-                ))}
-              </div>
+              <MediaVirtualGrid
+                items={media}
+                onItemClick={handleOpenDetails}
+              />
 
               {/* PAGINATION */}
               {pagination?.totalPages > 1 && (

@@ -13,6 +13,7 @@ import {
   validateListPostsQuery,
 } from "@/backend/validators/post.validator";
 import { assertSafePagination } from "@/backend/lib/pagination";
+import { jsonWithListCache } from "@/backend/lib/cache-headers";
 
 // ============================================
 // REQUEST HELPERS
@@ -85,7 +86,7 @@ export async function getPostsController(request) {
 
     const result = await postService.getPosts(query);
 
-    return Response.json(
+    return jsonWithListCache(
       {
         success: true,
         data: result.posts,

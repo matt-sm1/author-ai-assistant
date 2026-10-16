@@ -14,7 +14,7 @@ DATABASE_URL=postgresql://...
 BOOTSTRAP_ADMIN_EMAIL=admin
 BOOTSTRAP_ADMIN_PASSWORD=admin123
 BOOTSTRAP_ADMIN_NAME=Admin
-# plus JWT_SECRET / CRON_SECRET / Hostinger (or Cloudinary) as needed
+# plus JWT_SECRET / CRON_SECRET / Hostinger media env as needed
 ```
 
 Login with username **`admin`** and password **`admin123`** (after bootstrap). Change these in production.

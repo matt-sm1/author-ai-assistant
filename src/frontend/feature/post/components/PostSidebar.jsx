@@ -2,7 +2,7 @@
 "use client";
 
 import { Image as ImageIcon, X } from "lucide-react";
-import Image from "next/image";
+import MediaImage from "@/frontend/components/ui/MediaImage";
 
 import useCategories from "@/frontend/feature/category/hooks/useCategories";
 import useTags from "@/frontend/feature/tag/hooks/useTags";
@@ -178,10 +178,11 @@ export default function PostSidebar({
                   Your browser does not support the video element.
                 </video>
               ) : (
-                <Image
+                <MediaImage
                   src={post.image}
                   alt="Selected featured image"
                   fill
+                  priority
                   sizes="(max-width: 1024px) 100vw, 340px"
                   className="object-cover"
                 />

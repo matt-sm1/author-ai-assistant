@@ -12,7 +12,8 @@
     "bootstrap": "node --env-file=.env.local scripts/bootstrap-admin.mjs",
     "setup:db": "npm run migrate && npm run bootstrap",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "copy:tinymce": "node scripts/copy-tinymce.mjs"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.24",
@@ -24,11 +25,10 @@
     "@radix-ui/react-select": "^2.3.8",
     "@radix-ui/react-slot": "^1.4.0",
     "@reduxjs/toolkit": "^2.13.0",
+    "@tanstack/react-virtual": "^3.14.21",
     "@tinymce/tinymce-react": "^6.3.0",
-    "axios": "^1.20.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
-    "cloudinary": "^2.11.0",
     "clsx": "^2.1.1",
     "dotenv": "^18.0.6",
     "file-type": "^21.3.4",

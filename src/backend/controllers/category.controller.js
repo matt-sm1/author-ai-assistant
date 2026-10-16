@@ -13,6 +13,7 @@ import {
   validateCategoryId,
 } from "@/backend/validators/category.validator";
 import { parsePaginationParams } from "@/backend/lib/pagination";
+import { jsonWithListCache } from "@/backend/lib/cache-headers";
 
 // ============================================
 // REQUEST HELPERS
@@ -92,7 +93,7 @@ export async function getCategoriesController(request) {
       search,
     });
 
-    return Response.json(
+    return jsonWithListCache(
       {
         success: true,
         data: result.categories,

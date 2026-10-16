@@ -1,7 +1,6 @@
 import { AppError } from "@/backend/errors/app-error";
 import { HTTP_STATUS } from "@/backend/constants/http-status";
 import { ERROR_CODES } from "@/backend/constants/error-codes";
-import { validateMediaUpload } from "@/backend/validators/media-upload.validator";
 import { getStorageProviderName } from "@/backend/adapters/storage/storage.factory";
 import {
   buildMediaStorageKey,
@@ -94,45 +93,11 @@ export class MediaService {
     };
   }
 
-  /**
-   * Cloudinary multipart path (legacy).
-   */
-  async uploadMedia(fileBuffer, filename) {
-    if (getStorageProviderName() === "hostinger") {
-      throw this.badRequest(
-        "Use the direct upload session flow for Hostinger storage",
-      );
-    }
-
-    const validated = await validateMediaUpload(fileBuffer);
-
-    const uploaded = await this.storageProvider.upload(fileBuffer, {
-      folder: "blog-cms/media",
-      resourceType: validated.resourceType,
-    });
-
-    try {
-      return await this.mediaRepository.create({
-        ...uploaded,
-        filename,
-        resource_type: validated.resourceType,
-        mime_type: validated.mimeType,
-        format: validated.format,
-        size_bytes: validated.sizeBytes,
-        status: "ready",
-      });
-    } catch (error) {
-      try {
-        await this.storageProvider.delete(
-          uploaded.storage_key,
-          uploaded.resource_type,
-        );
-      } catch {
-        /* ignore cleanup */
-      }
-
-      this.handleDatabaseError(error);
-    }
+  /** Legacy multipart upload — disabled; use direct Hostinger sessions. */
+  async uploadMedia() {
+    throw this.badRequest(
+      "Use the direct upload session flow for Hostinger storage",
+    );
   }
 
   /**

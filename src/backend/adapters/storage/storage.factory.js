@@ -1,8 +1,7 @@
-import { CloudinaryAdapter } from "./cloudinary.adapter";
 import { HostingerAdapter } from "./hostinger.adapter";
 
 // ============================================
-// STORAGE PROVIDER FACTORY
+// STORAGE PROVIDER FACTORY (Hostinger only)
 // ============================================
 
 export function createStorageProvider() {
@@ -10,18 +9,15 @@ export function createStorageProvider() {
     process.env.STORAGE_PROVIDER || "hostinger"
   ).toLowerCase();
 
-  switch (provider) {
-    case "hostinger":
-      return new HostingerAdapter();
-
-    case "cloudinary":
-      return new CloudinaryAdapter();
-
-    default:
-      throw new Error(`Unsupported storage provider: ${provider}`);
+  if (provider !== "hostinger") {
+    throw new Error(
+      `Unsupported storage provider "${provider}". Only hostinger is supported.`,
+    );
   }
+
+  return new HostingerAdapter();
 }
 
 export function getStorageProviderName() {
-  return (process.env.STORAGE_PROVIDER || "hostinger").toLowerCase();
+  return "hostinger";
 }

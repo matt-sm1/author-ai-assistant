@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { ImagePlus } from "lucide-react";
-import Image from "next/image";
+import MediaImage from "@/frontend/components/ui/MediaImage";
 
 import {
   Dialog,
@@ -111,16 +111,12 @@ export default function AuthorFormDialog({
                     {edit.name?.trim()?.charAt(0)?.toUpperCase() || "A"}
                   </span>
                   {edit.avatar_url && (
-                    <Image
+                    <MediaImage
                       src={edit.avatar_url}
                       alt={`${edit.name || "Author"} profile preview`}
                       fill
                       sizes="64px"
-                      unoptimized
                       className="absolute inset-0 h-full w-full object-cover"
-                      onError={(event) => {
-                        event.currentTarget.style.display = "none";
-                      }}
                     />
                   )}
                 </div>

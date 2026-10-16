@@ -16,7 +16,7 @@
  *
  * @typedef {object} StorageProvider
  * @property {(buffer: Buffer, options?: object) => Promise<NormalizedStorageObject>} [upload]
- *   Optional; used by Cloudinary multipart path only.
+ *   Optional; Hostinger uses direct browser upload + finalize instead.
  * @property {(url: string, options?: object) => Promise<NormalizedStorageObject>} [uploadFromUrl]
  * @property {(storageKey: string, resourceType?: string) => Promise<{ result: string }>} delete
  * @property {(storageKey: string, resourceType: string) => string|null} getThumbnailUrl

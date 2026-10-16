@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { PenLine } from "lucide-react";
 
 import { adminNavigation } from "@/frontend/lib/constants";
@@ -15,6 +15,7 @@ export default function Sidebar({
 
 }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (href) =>
     href === "/admin"
@@ -51,7 +52,10 @@ export default function Sidebar({
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               onClick={onNavigate}
+              onPointerEnter={() => router.prefetch(item.href)}
+              onFocus={() => router.prefetch(item.href)}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",

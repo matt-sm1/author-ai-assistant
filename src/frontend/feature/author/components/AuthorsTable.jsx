@@ -1,7 +1,7 @@
 "use client";
 
 import { Pencil, Trash2, Power } from "lucide-react";
-import Image from "next/image";
+import MediaImage from "@/frontend/components/ui/MediaImage";
 
 import { Panel, StatusBadge } from "@/frontend/components/shared/ui-bits";
 import DataTable from "@/frontend/components/shared/DataTable";
@@ -28,16 +28,12 @@ export default function AuthorsTable({
             {author.name?.trim()?.charAt(0)?.toUpperCase() || "A"}
           </span>
           {author.avatar_url && (
-            <Image
+            <MediaImage
               src={author.avatar_url}
               alt={`${author.name} profile`}
               fill
               sizes="40px"
-              unoptimized
               className="absolute inset-0 h-full w-full object-cover"
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-              }}
             />
           )}
         </div>

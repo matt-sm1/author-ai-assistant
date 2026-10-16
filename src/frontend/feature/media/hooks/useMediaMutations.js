@@ -70,18 +70,7 @@ export default function useMediaMutations() {
         }
       }
 
-      // Fallback: Cloudinary multipart when sessions are unavailable
-      const message = error?.data?.message || error?.message || "";
-      if (
-        message.includes("only available for Hostinger") ||
-        message.includes("Cloudinary")
-      ) {
-        const formData = new FormData();
-        formData.append("file", file);
-        return uploadMediaMutation(formData).unwrap();
-      }
-
-      throw error;
+      throw error
     } finally {
       setIsDirectUploading(false);
       abortRef.current = null;

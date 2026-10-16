@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import Image from "next/image";
+import MediaImage from "@/frontend/components/ui/MediaImage";
 
 import { Button } from "@/frontend/components/ui/Button";
 
@@ -146,12 +146,13 @@ export default function MediaDetailsDialog({
                 className="max-h-80 w-full"
               />
             ) : (
-              <Image
+              <MediaImage
                 src={item.url}
                 alt={form.alt_text || item.filename}
                 width={640}
                 height={320}
                 sizes="(max-width: 768px) 100vw, 640px"
+                priority
                 className="max-h-80 w-full object-contain"
               />
             )}

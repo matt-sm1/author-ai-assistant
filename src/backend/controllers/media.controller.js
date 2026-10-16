@@ -6,6 +6,7 @@ import { ERROR_CODES } from "@/backend/constants/error-codes";
 
 import { createMediaService } from "@/backend/factories/media.factory";
 import { parsePaginationParams } from "@/backend/lib/pagination";
+import { jsonWithListCache } from "@/backend/lib/cache-headers";
 
 import { Readable } from "node:stream";
 
@@ -167,7 +168,7 @@ export async function getMediaController(request) {
       resourceType,
     });
 
-    return Response.json(
+    return jsonWithListCache(
       {
         success: true,
         data: result.media,

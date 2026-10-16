@@ -3,8 +3,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
+import MediaImage from "@/frontend/components/ui/MediaImage";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -42,7 +42,16 @@ export default function DashboardView() {
     data,
     isLoading: postsLoading,
     error: postsError,
-  } = useGetPostsQuery({ page: 1, limit: 5, sortBy: "created_at", sortOrder: "desc" });
+  } = useGetPostsQuery(
+    { page: 1, limit: 5, sortBy: "created_at", sortOrder: "desc" },
+    {
+      selectFromResult: ({ data: postsData, isLoading, error }) => ({
+        data: postsData,
+        isLoading,
+        error,
+      }),
+    },
+  );
 
   const {
     data: dashboardStats,
@@ -179,13 +188,12 @@ export default function DashboardView() {
                 className="group flex items-center gap-4 px-5 py-3 transition hover:bg-muted/50"
               >
                {p.image || p.featured_image ? (
-  <Image
+  <MediaImage
     src={p.image || p.featured_image}
     alt=""
     width={64}
     height={48}
     sizes="64px"
-    unoptimized
     className="h-12 w-16 shrink-0 rounded-lg object-cover"
   />
 ) : (

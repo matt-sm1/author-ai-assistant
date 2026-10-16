@@ -13,6 +13,7 @@ import {
   validateTagId,
 } from "@/backend/validators/tag.validator";
 import { parsePaginationParams } from "@/backend/lib/pagination";
+import { jsonWithListCache } from "@/backend/lib/cache-headers";
 
 // ============================================
 // REQUEST HELPERS
@@ -93,7 +94,7 @@ export async function getTagsController(request) {
       search,
     });
 
-    return Response.json(
+    return jsonWithListCache(
       {
         success: true,
         data: tags,

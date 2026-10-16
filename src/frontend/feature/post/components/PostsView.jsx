@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useRef, useState } from "react";
+import { useDeferredValue, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -29,27 +29,33 @@ export default function PostsView() {
 
   const deletePending = useRef(false);
   const limit = 10;
+  const deferredSearch = useDeferredValue(search.trim());
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    error,
-  } = useGetPostsQuery({
-    page,
-    limit,
-    search: search.trim(),
-  });
+  const { posts, pagination, isLoading, isFetching, error } = useGetPostsQuery(
+    {
+      page,
+      limit,
+      search: deferredSearch,
+    },
+    {
+      selectFromResult: (result) => ({
+        posts: result.currentData?.posts ?? result.data?.posts ?? [],
+        pagination:
+          result.currentData?.pagination ??
+          result.data?.pagination ?? {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          },
+        isLoading: result.isLoading,
+        isFetching: result.isFetching,
+        error: result.error,
+      }),
+    },
+  );
 
   const { deletePost, isDeleting } = usePostMutations();
-
-  const posts = data?.posts ?? [];
-  const pagination = data?.pagination ?? {
-    page,
-    limit,
-    total: 0,
-    totalPages: 0,
-  };
 
   function handleAdd() {
     router.push("/admin/post/new");

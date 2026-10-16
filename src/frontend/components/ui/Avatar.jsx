@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 
+import MediaImage from "@/frontend/components/ui/MediaImage";
 import { cn } from "@/frontend/lib/utils";
 
 const AvatarContext = React.createContext(null);
@@ -40,12 +40,11 @@ const AvatarImage = React.forwardRef(
     if (!src) return null;
 
     return (
-      <Image
+      <MediaImage
         ref={ref}
         src={src}
         fill
         sizes="40px"
-        unoptimized
         alt={alt}
         className={cn("object-cover", className)}
         onLoad={(event) => {

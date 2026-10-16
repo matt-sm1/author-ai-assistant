@@ -44,7 +44,7 @@ export const mediaApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: "Media", id }],
     }),
 
-    /** Legacy Cloudinary multipart upload */
+    /** Legacy multipart upload (Hostinger path prefers direct upload + finalize) */
     uploadMedia: builder.mutation({
       query: (formData) => ({
         url: "/media",
@@ -72,6 +72,32 @@ export const mediaApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response) => response.data,
       invalidatesTags: [{ type: "Media", id: "LIST" }],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data: media } = await queryFulfilled;
+          if (!media?.id) return;
+
+          // Instant grid paint for the default library query (page 1).
+          dispatch(
+            mediaApi.util.updateQueryData(
+              "getMedia",
+              { page: 1, limit: 20, search: "", resourceType: "" },
+              (draft) => {
+                if (!draft?.media) return;
+                draft.media = [
+                  media,
+                  ...draft.media.filter((item) => item.id !== media.id),
+                ];
+                if (draft.pagination) {
+                  draft.pagination.total = (draft.pagination.total ?? 0) + 1;
+                }
+              },
+            ),
+          );
+        } catch {
+          /* finalize failed — list refetch via tags still applies */
+        }
+      },
     }),
 
     abortUpload: builder.mutation({
