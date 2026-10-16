@@ -1,16 +1,11 @@
-import { getPublicSiteUrl } from "@/frontend/feature/blog/lib/site-urls";
-
+/** Block all crawlers — site is not for public search indexing. */
 export default function robots() {
-  const base = getPublicSiteUrl() || "https://author-ai-assistant.vercel.app";
-
   return {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
-        disallow: ["/admin", "/admin/", "/api/", "/register"],
+        disallow: "/",
       },
     ],
-    sitemap: `${base}/sitemap.xml`,
   };
 }

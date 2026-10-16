@@ -17,6 +17,16 @@ export const metadata = {
   },
   description:
     "Insights for modern authors — AI, reader engagement, and book marketing.",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
