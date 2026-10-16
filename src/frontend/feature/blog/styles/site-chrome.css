@@ -1,4 +1,4 @@
-/* Tokens mirrored from ai-author-assistant-website marketing theme */
+/* Tokens + layout mirrored from ai-author-assistant-website */
 .site-chrome {
   --theme-heading: #09041d;
   --theme-copy: #333743;
@@ -9,15 +9,100 @@
   --theme-surface-muted: #f8f8f8;
   --theme-border: #e1e1e1;
   --theme-border-subtle: #eae8ec;
+  --theme-pink-pale: #f5c6ea;
+  --theme-purple-pale: #c9a9f5;
+  --theme-purple-light: #9b72f2;
+  --theme-purple-wash: #f6e6ff;
   --line: var(--theme-border);
-  --font-site: Inter, "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+  --shadow-card-sm: 0 2px 5px rgba(41, 36, 44, 0.12);
+  --shadow-card-raised: 0 6px 16px rgba(41, 36, 44, 0.15);
+  --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-host-grotesk), "Host Grotesk", var(--font-sans);
   color: var(--theme-copy);
-  font-family: var(--font-site);
+  font-family: var(--font-sans);
   background: var(--theme-background);
+}
+
+.site-chrome .font-sans {
+  font-family: var(--font-sans);
+}
+
+.site-chrome .font-display {
+  font-family: var(--font-display);
+}
+
+.site-chrome .text-heading {
+  color: var(--theme-heading);
+}
+
+.site-chrome .text-copy {
+  color: var(--theme-copy);
 }
 
 .site-chrome a {
   text-decoration: none;
+}
+
+/* Desktop - 1440px+ */
+.site-chrome .section {
+  width: 100%;
+  padding-inline: 91.24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.site-chrome .container {
+  width: 100%;
+  max-width: 1344px;
+  margin: 0 auto;
+  padding-inline: 20px;
+  padding-block: 76px;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+
+@media (max-width: 1439px) {
+  .site-chrome .section {
+    padding-inline: 64px;
+  }
+
+  .site-chrome .container {
+    max-width: 100%;
+    padding-inline: 16px;
+    padding-block: 64px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .site-chrome .section {
+    padding-inline: 40px;
+  }
+
+  .site-chrome .container {
+    padding-inline: 16px;
+    padding-block: 52px;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-chrome .section {
+    padding-inline: 24px;
+  }
+
+  .site-chrome .container {
+    padding-inline: 12px;
+    padding-block: 48px;
+  }
+}
+
+@media (max-width: 479px) {
+  .site-chrome .section {
+    padding-inline: 16px;
+  }
+
+  .site-chrome .container {
+    padding-inline: 8px;
+    padding-block: 40px;
+  }
 }
 
 .site-chrome__nav-link {

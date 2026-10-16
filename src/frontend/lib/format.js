@@ -12,6 +12,18 @@ export function fmtDate(d) {
   });
 }
 
+/** Marketing Articles date style: "September 28, 2026". */
+export function fmtArticleDate(d) {
+  if (!d) return "";
+  const date = new Date(d);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 /** Alias for shared generateSlug (client form fields). */
 export function slugify(text) {
   return generateSlug(text);

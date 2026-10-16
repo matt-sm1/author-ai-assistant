@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  fmtArticleDate,
   karachiDateTimeLocalMin,
   karachiDateTimeToISO,
   toLocalDateTime,
@@ -17,5 +18,13 @@ describe("Karachi datetime helpers", () => {
   it("converts PKT wall clock to ISO", () => {
     const iso = karachiDateTimeToISO("2026-06-15T17:00");
     expect(iso).toBe("2026-06-15T12:00:00.000Z");
+  });
+});
+
+describe("fmtArticleDate", () => {
+  it("formats long month like marketing Articles cards", () => {
+    expect(fmtArticleDate("2026-09-28T00:00:00.000Z")).toBe(
+      "September 28, 2026"
+    );
   });
 });
