@@ -143,10 +143,8 @@ function PickerVirtualGrid({ items, onSelect }) {
                         }
                         width={400}
                         height={300}
-                        sizes="(max-width: 640px) 50vw, 25vw"
                         className="aspect-[4/3] w-full bg-muted object-contain"
                         priority={priority}
-                        viewportLazy={!priority}
                       />
                     ) : (
                       <div className="flex aspect-[4/3] flex-col items-center justify-center gap-2 bg-muted text-muted-foreground">

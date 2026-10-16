@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 import MediaCard from "@/frontend/feature/media/components/MediaCard";
 
 const ROW_HEIGHT = 280;
 const GAP = 16;
+/** Prefer a plain CSS grid for small pages — virtualizer needs a scrollport. */
+const VIRTUALIZE_AFTER = 12;
 
 function useColumnCount(width) {
   if (width >= 1280) return 4;
@@ -15,8 +17,26 @@ function useColumnCount(width) {
   return 1;
 }
 
+function PlainGrid({ items, columns, onItemClick }) {
+  return (
+    <div
+      className="grid gap-4"
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
+      {items.map((item, index) => (
+        <MediaCard
+          key={item.id ?? index}
+          item={item}
+          priority={index < 2}
+          onClick={() => onItemClick?.(item)}
+        />
+      ))}
+    </div>
+  );
+}
+
 /**
- * Virtualized media grid — only mounts rows near the viewport.
+ * Virtualized media grid — only mounts rows near the viewport for large lists.
  */
 export default function MediaVirtualGrid({ items, onItemClick }) {
   const parentRef = useRef(null);
@@ -39,33 +59,34 @@ export default function MediaVirtualGrid({ items, onItemClick }) {
   }, []);
 
   const columns = useColumnCount(width);
+  const shouldVirtualize = items.length > VIRTUALIZE_AFTER;
   const rowCount = Math.ceil(items.length / columns);
 
   const rowVirtualizer = useVirtualizer({
-    count: rowCount,
+    count: shouldVirtualize ? rowCount : 0,
     getScrollElement: () => parentRef.current,
     estimateSize: () => ROW_HEIGHT + GAP,
-    overscan: 2,
+    overscan: 3,
   });
+
+  if (!shouldVirtualize) {
+    return (
+      <div ref={parentRef} className="w-full">
+        <PlainGrid items={items} columns={columns} onItemClick={onItemClick} />
+      </div>
+    );
+  }
 
   const virtualRows = rowVirtualizer.getVirtualItems();
   const totalSize = rowVirtualizer.getTotalSize();
-
-  const maxHeight = useMemo(() => {
-    if (items.length <= columns * 2) return undefined;
-    return Math.min(720, Math.max(360, ROW_HEIGHT * 2.5));
-  }, [items.length, columns]);
 
   return (
     <div
       ref={parentRef}
       className="w-full overflow-y-auto"
-      style={{ maxHeight }}
+      style={{ maxHeight: Math.min(720, Math.max(400, ROW_HEIGHT * 2.5)) }}
     >
-      <div
-        className="relative w-full"
-        style={{ height: totalSize }}
-      >
+      <div className="relative w-full" style={{ height: totalSize }}>
         {virtualRows.map((virtualRow) => {
           const start = virtualRow.index * columns;
           const rowItems = items.slice(start, start + columns);

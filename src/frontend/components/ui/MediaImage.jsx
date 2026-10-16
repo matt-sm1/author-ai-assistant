@@ -1,13 +1,8 @@
 "use client";
 
 import { forwardRef, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 
 import { cn } from "@/frontend/lib/utils";
-
-/** 10×10 neutral shimmer used as blur placeholder */
-const BLUR_DATA_URL =
-  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZTVlN2ViIi8+PC9zdmc+";
 
 function isHttpUrl(src) {
   if (typeof src !== "string" || !src) return false;
@@ -20,8 +15,9 @@ function isHttpUrl(src) {
 }
 
 /**
- * Hostinger-first media renderer. Falls back to native <img> so URLs never blank.
- * When `viewportLazy` is true, defers setting src until near the viewport.
+ * Hostinger-first media renderer.
+ * Uses native <img> for remote URLs so paint is not blocked by next/image
+ * remotePatterns / optimizer failures.
  */
 const MediaImage = forwardRef(function MediaImage(
   {
@@ -30,10 +26,8 @@ const MediaImage = forwardRef(function MediaImage(
     fill = false,
     width,
     height,
-    sizes,
     className,
     priority = false,
-    unoptimized = false,
     viewportLazy = false,
     onLoad,
     onError,
@@ -41,8 +35,8 @@ const MediaImage = forwardRef(function MediaImage(
   ref,
 ) {
   const rootRef = useRef(null);
-  const [useNative, setUseNative] = useState(false);
   const [inView, setInView] = useState(!viewportLazy || priority);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (!viewportLazy || priority || inView) return undefined;
@@ -60,16 +54,17 @@ const MediaImage = forwardRef(function MediaImage(
           io.disconnect();
         }
       },
-      { rootMargin: "200px" },
+      { rootMargin: "200px", threshold: 0.01 },
     );
 
     io.observe(node);
     return () => io.disconnect();
   }, [viewportLazy, priority, inView]);
 
-  if (!src || !isHttpUrl(src)) {
+  if (!src || !isHttpUrl(src) || failed) {
     return (
       <div
+        ref={rootRef}
         className={cn("bg-muted", fill && "absolute inset-0", className)}
         aria-hidden={!alt}
       />
@@ -82,7 +77,7 @@ const MediaImage = forwardRef(function MediaImage(
         ref={rootRef}
         className={cn(
           "animate-pulse bg-muted",
-          fill && "absolute inset-0",
+          fill && "absolute inset-0 h-full w-full",
           className,
         )}
         aria-hidden="true"
@@ -90,43 +85,21 @@ const MediaImage = forwardRef(function MediaImage(
     );
   }
 
-  if (useNative) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        ref={ref}
-        src={src}
-        alt={alt}
-        width={fill ? undefined : width}
-        height={fill ? undefined : height}
-        loading={priority ? "eager" : "lazy"}
-        decoding="async"
-        fetchPriority={priority ? "high" : "auto"}
-        className={cn(fill && "absolute inset-0 h-full w-full", className)}
-        onLoad={onLoad}
-        onError={onError}
-      />
-    );
-  }
-
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       ref={ref}
       src={src}
       alt={alt}
-      fill={fill}
       width={fill ? undefined : width}
       height={fill ? undefined : height}
-      sizes={sizes}
-      priority={priority}
-      unoptimized={unoptimized}
-      placeholder="blur"
-      blurDataURL={BLUR_DATA_URL}
+      loading={priority ? "eager" : "lazy"}
       decoding="async"
-      className={className}
+      fetchPriority={priority ? "high" : "auto"}
+      className={cn(fill && "absolute inset-0 h-full w-full", className)}
       onLoad={onLoad}
       onError={(event) => {
-        setUseNative(true);
+        setFailed(true);
         onError?.(event);
       }}
     />

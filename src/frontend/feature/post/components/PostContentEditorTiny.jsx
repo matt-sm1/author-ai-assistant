@@ -14,6 +14,8 @@ export default function PostContentEditorTiny({ value = "", onChange }) {
       init={{
         base_url: "/tinymce",
         suffix: ".min",
+        // TinyMCE 8 self-hosted requires an explicit GPL or commercial key.
+        license_key: "gpl",
         height: 500,
         paste_data_images: true,
         paste_merge_formats: false,

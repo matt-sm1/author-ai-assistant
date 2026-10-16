@@ -30,18 +30,13 @@ export default function MediaCard({ item, onClick, priority = false }) {
       )}
     >
       {/* MEDIA PREVIEW */}
-      <div
-        className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted"
-        style={{ contentVisibility: "auto", containIntrinsicSize: "240px 180px" }}
-      >
+      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted">
         <MediaImage
           src={previewUrl}
           alt={item.alt_text || item.filename}
           fill
-          sizes="(max-width: 768px) 50vw, 25vw"
           className="object-contain"
           priority={priority}
-          viewportLazy={!priority}
         />
 
         {/* VIDEO PLAY BUTTON */}

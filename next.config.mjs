@@ -5,6 +5,11 @@ function hostingerRemotePatterns() {
       hostname: "**.hostingersite.com",
       pathname: "/**",
     },
+    {
+      protocol: "https",
+      hostname: "**.hostinger.site",
+      pathname: "/**",
+    },
   ];
 
   const base = process.env.HOSTINGER_PUBLIC_BASE_URL?.trim();
@@ -29,6 +34,7 @@ function hostingerRemotePatterns() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // MediaImage uses native <img> for remotes; keep allowlist for any residual next/image usage.
     remotePatterns: hostingerRemotePatterns(),
   },
   turbopack: {
