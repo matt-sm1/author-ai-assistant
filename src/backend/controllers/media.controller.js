@@ -267,3 +267,80 @@ export async function deleteMediaController(request, userId, context) {
     return handleError(error);
   }
 }
+
+// ============================================
+// HOSTINGER DIRECT UPLOAD SESSION
+// ============================================
+
+export async function createUploadSessionController(request) {
+  try {
+    const body = await parseJsonBody(request);
+    const mediaService = createMediaService();
+
+    const session = await mediaService.createUploadSession({
+      filename: body?.filename,
+      mimeType: body?.mimeType,
+      sizeBytes: body?.sizeBytes,
+    });
+
+    return Response.json(
+      {
+        success: true,
+        data: session,
+      },
+      { status: HTTP_STATUS.CREATED },
+    );
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export async function finalizeUploadController(request) {
+  try {
+    const body = await parseJsonBody(request);
+
+    if (!body?.mediaId || !body?.receipt) {
+      throw badRequest("mediaId and receipt are required");
+    }
+
+    const mediaService = createMediaService();
+    const media = await mediaService.finalizeUpload({
+      mediaId: body.mediaId,
+      receipt: body.receipt,
+    });
+
+    return Response.json(
+      {
+        success: true,
+        message: "Media upload finalized",
+        data: media,
+      },
+      { status: HTTP_STATUS.OK },
+    );
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export async function abortUploadController(request) {
+  try {
+    const body = await parseJsonBody(request);
+
+    if (!body?.mediaId) {
+      throw badRequest("mediaId is required");
+    }
+
+    const mediaService = createMediaService();
+    await mediaService.abortUpload(body.mediaId);
+
+    return Response.json(
+      {
+        success: true,
+        message: "Upload aborted",
+      },
+      { status: HTTP_STATUS.OK },
+    );
+  } catch (error) {
+    return handleError(error);
+  }
+}

@@ -13,6 +13,7 @@ import { MEDIA_CONFIG } from "@/shared/constants/media.constants";
 export default function MediaUpload({
   onFileSelect,
   uploading = false,
+  uploadProgress = 0,
   error = "",
 }) {
   const inputRef = useRef(null);
@@ -129,9 +130,22 @@ export default function MediaUpload({
         </p>
 
         {uploading && (
-          <p role="status" className="mt-3 text-sm text-primary">
-            Uploading media...
-          </p>
+          <div className="mt-4 w-full max-w-xs" role="status">
+            <p className="mb-2 text-sm text-primary">
+              Uploading media
+              {uploadProgress > 0
+                ? `… ${Math.round(uploadProgress * 100)}%`
+                : "…"}
+            </p>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full bg-primary transition-[width] duration-200"
+                style={{
+                  width: `${Math.min(100, Math.round(uploadProgress * 100))}%`,
+                }}
+              />
+            </div>
+          </div>
         )}
 
         {error && (

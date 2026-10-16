@@ -75,6 +75,7 @@ export default function MediaView() {
     updateMedia,
     deleteMedia,
     isUploading,
+    uploadProgress,
     isUpdating,
     isDeleting,
   } = useMediaMutations();
@@ -270,6 +271,7 @@ export default function MediaView() {
       <MediaUpload
         onFileSelect={handleFileSelect}
         uploading={isUploading}
+        uploadProgress={uploadProgress}
         error={uploadError}
       />
 

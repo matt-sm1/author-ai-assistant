@@ -1,4 +1,3 @@
-
 import { baseApi } from "@/frontend/store/api/baseApi";
 
 // ============================================
@@ -7,10 +6,6 @@ import { baseApi } from "@/frontend/store/api/baseApi";
 
 export const mediaApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // ============================================
-    // GET ALL MEDIA
-    // ============================================
-
     getMedia: builder.query({
       query: ({
         page = 1,
@@ -41,24 +36,15 @@ export const mediaApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // ============================================
-    // GET MEDIA BY ID
-    // ============================================
-
     getMediaById: builder.query({
       query: (id) => `/media/${id}`,
 
       transformResponse: (response) => response.data,
 
-      providesTags: (result, error, id) => [
-        { type: "Media", id },
-      ],
+      providesTags: (result, error, id) => [{ type: "Media", id }],
     }),
 
-    // ============================================
-    // UPLOAD MEDIA
-    // ============================================
-
+    /** Legacy Cloudinary multipart upload */
     uploadMedia: builder.mutation({
       query: (formData) => ({
         url: "/media",
@@ -69,9 +55,32 @@ export const mediaApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: "Media", id: "LIST" }],
     }),
 
-    // ============================================
-    // UPDATE MEDIA METADATA
-    // ============================================
+    createUploadSession: builder.mutation({
+      query: (body) => ({
+        url: "/media/upload-session",
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response) => response.data,
+    }),
+
+    finalizeUpload: builder.mutation({
+      query: (body) => ({
+        url: "/media/finalize",
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response) => response.data,
+      invalidatesTags: [{ type: "Media", id: "LIST" }],
+    }),
+
+    abortUpload: builder.mutation({
+      query: (body) => ({
+        url: "/media/abort",
+        method: "POST",
+        body,
+      }),
+    }),
 
     updateMedia: builder.mutation({
       query: ({ id, data }) => ({
@@ -86,11 +95,6 @@ export const mediaApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // ============================================
-    // DELETE MEDIA
-    // ============================================
-
-
     deleteMedia: builder.mutation({
       query: (id) => ({
         url: `/media/${id}`,
@@ -98,29 +102,22 @@ export const mediaApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (result, error, id) => [
-        // Media gallery refresh
         { type: "Media", id },
         { type: "Media", id: "LIST" },
-
-        // Author profile pictures refresh
         { type: "Authors", id: "LIST" },
-
-        // Posts ke featured images refresh
         { type: "Posts", id: "LIST" },
       ],
     }),
-
   }),
 });
-
-// ============================================
-// EXPORT HOOKS
-// ============================================
 
 export const {
   useGetMediaQuery,
   useGetMediaByIdQuery,
   useUploadMediaMutation,
+  useCreateUploadSessionMutation,
+  useFinalizeUploadMutation,
+  useAbortUploadMutation,
   useUpdateMediaMutation,
   useDeleteMediaMutation,
 } = mediaApi;

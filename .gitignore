@@ -42,3 +42,6 @@ yarn-error.log*
 next-env.d.ts
 
 .env.local
+
+# Hostinger media API secrets (deploy from config.sample.php)
+/hostinger-media-api/config.php

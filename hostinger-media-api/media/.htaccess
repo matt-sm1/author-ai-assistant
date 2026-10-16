@@ -1,0 +1,18 @@
+# Place this file inside public_html/media/
+# Deny script execution; allow static assets only.
+
+<IfModule mod_authz_core.c>
+  Require all granted
+</IfModule>
+
+<FilesMatch "\.(?i:php|phtml|php3|php4|php5|phps|cgi|pl|asp|aspx|shtml)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>
+
+Options -Indexes
